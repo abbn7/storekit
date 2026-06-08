@@ -1,0 +1,3 @@
+- [Image Upload — Multer](image-upload-multer.md) — replaced Replit Object Storage with multer disk storage; use POST /api/uploads (multipart)
+- [Docker Portability](docker-portability.md) — project ships with Dockerfile, docker-compose.yml, .env.example, setup.sh for standalone deployment
+- [pnpm install after multer add](pnpm-reinstall-quirk.md) — adding packages via pnpm sometimes drops node_modules links; run pnpm install at root to fix missing module errors
