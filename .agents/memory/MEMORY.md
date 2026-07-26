@@ -1,3 +1,5 @@
 - [Image Upload — Multer](image-upload-multer.md) — replaced Replit Object Storage with multer disk storage; use POST /api/uploads (multipart)
 - [Docker Portability](docker-portability.md) — project ships with Dockerfile, docker-compose.yml, .env.example, setup.sh for standalone deployment
 - [pnpm install after multer add](pnpm-reinstall-quirk.md) — adding packages via pnpm sometimes drops node_modules links; run pnpm install at root to fix missing module errors
+- [Railway Deployment](railway-deployment.md) — railway.toml + Dockerfile multi-stage; GitHub repo: abdelhamednada631-del/storekit; volumes needed for /app/uploads persistence
+- [TypeScript Fixes — key patterns](ts-fixes-patterns.md) — stale lib declarations: run typecheck:libs first; Express 5 params use String(req.params.x); objectStorage response needs type cast
