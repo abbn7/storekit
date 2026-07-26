@@ -43,8 +43,8 @@ export default function RecentlyViewed({ excludeId }: Props) {
             name={p.name}
             basePrice={p.basePrice}
             compareAtPrice={p.compareAtPrice}
-            images={p.images}
-            variants={p.variants}
+            images={(p.images ?? []) as { url: string; alt?: string }[]}
+            variants={(p.variants ?? []) as any}
             isFeatured={p.isFeatured}
             isNewArrival={p.isNewArrival}
             index={i}

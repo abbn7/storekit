@@ -60,7 +60,7 @@ router.post(
  * Serve uploaded images from disk.
  */
 router.get("/uploads/:filename", (req: Request, res: Response) => {
-  const { filename } = req.params;
+  const filename = String(req.params.filename);
   if (filename.includes("..") || filename.includes("/")) {
     res.status(400).json({ error: "Invalid filename" });
     return;

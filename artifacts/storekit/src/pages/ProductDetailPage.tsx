@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "wouter";
 import Layout from "@/components/Layout";
-import { useGetProductBySlug, useListProducts } from "@workspace/api-client-react";
+import { useGetProductBySlug, useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import { formatPrice, getProductImage } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -138,11 +138,11 @@ export default function ProductDetailPage() {
   const { addItem: addToRecentlyViewed } = useRecentlyViewedStore();
   const { toast } = useToast();
 
-  // Related products (same collection)
-  const collectionSlug = product?.collections?.[0]?.slug;
+  // Related products — fetch active products and filter client-side
+  const relatedParams = { status: "active", pageSize: "5" } as any;
   const { data: relatedData } = useListProducts(
-    { collectionSlug, status: "active", pageSize: "5" } as any,
-    { query: { enabled: !!collectionSlug } }
+    relatedParams,
+    { query: { enabled: !!product, queryKey: getListProductsQueryKey(relatedParams) } }
   );
   const relatedProducts = (relatedData?.products ?? []).filter((p: any) => p.id !== product?.id).slice(0, 4);
 

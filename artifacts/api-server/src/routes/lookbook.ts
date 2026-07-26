@@ -30,12 +30,14 @@ async function buildLookbookEntry(entry: typeof lookbookTable.$inferSelect) {
   const variantMap = new Map<string, typeof productVariantsTable.$inferSelect[]>();
 
   for (const img of images) {
-    if (!imageMap.has(img.productId)) imageMap.set(img.productId, []);
-    imageMap.get(img.productId)!.push(img);
+    const pid = img.productId as string;
+    if (!imageMap.has(pid)) imageMap.set(pid, []);
+    imageMap.get(pid)!.push(img);
   }
   for (const v of variants) {
-    if (!variantMap.has(v.productId)) variantMap.set(v.productId, []);
-    variantMap.get(v.productId)!.push(v);
+    const pid = v.productId as string;
+    if (!variantMap.has(pid)) variantMap.set(pid, []);
+    variantMap.get(pid)!.push(v);
   }
 
   const mappedTags = tags.map((tag) => {

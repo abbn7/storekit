@@ -76,7 +76,7 @@ function ProductTagPopover({ tag, onClose }: { tag: LookbookTag; onClose: () => 
           <X className="w-3.5 h-3.5" />
         </button>
         <button
-          onClick={() => inWishlist ? removeFromWishlist(product.id) : addToWishlist({ productId: product.id, productName: product.name, imageUrl: product.images[0]?.url ?? "", basePrice: product.basePrice, slug: product.slug })}
+          onClick={() => inWishlist ? removeFromWishlist(product.id) : addToWishlist(product.id)}
           className={`absolute top-2 left-2 w-6 h-6 bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors ${inWishlist ? "text-red-500" : "text-foreground"}`}
         >
           <Heart className={`w-3.5 h-3.5 ${inWishlist ? "fill-red-500" : ""}`} />
