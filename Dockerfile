@@ -1,4 +1,4 @@
-# ── Stage 1: Install dependencies ──────────────────────────────────────────
+# ── Stage 1: Install ALL dependencies (dev + prod) ──────────────────────────
 FROM node:24-alpine AS deps
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY scripts/package.json                 ./scripts/
 
 RUN pnpm install --frozen-lockfile
 
-# ── Stage 2: Build frontend (React/Vite) ────────────────────────────────────
+# ── Stage 2: Build frontend (React/Vite) ─────────────────────────────────────
 FROM deps AS frontend-builder
 WORKDIR /app
 
@@ -24,7 +24,7 @@ COPY artifacts/storekit/      ./artifacts/storekit/
 
 RUN pnpm --filter @workspace/storekit build
 
-# ── Stage 3: Build API server ────────────────────────────────────────────────
+# ── Stage 3: Build API server ─────────────────────────────────────────────────
 FROM deps AS api-builder
 WORKDIR /app
 
@@ -34,20 +34,23 @@ COPY scripts/                  ./scripts/
 
 RUN pnpm --filter @workspace/api-server run build
 
-# ── Stage 4: Production runtime ─────────────────────────────────────────────
+# ── Stage 4: Production runtime ───────────────────────────────────────────────
 FROM node:24-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy compiled API
+# Compiled API server
 COPY --from=api-builder  /app/artifacts/api-server/dist  ./dist/
 COPY --from=api-builder  /app/artifacts/api-server/package.json ./
 
-# Copy built frontend into ./public so Express serves it
+# Built React frontend — served as static files by Express
 COPY --from=frontend-builder /app/artifacts/storekit/dist/public ./public/
 
-# Install only production deps for the API
+# Drizzle SQL migration files — applied automatically on startup
+COPY lib/db/drizzle ./drizzle/
+
+# Install only production dependencies
 RUN npm install -g pnpm@10
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY lib/db/package.json              ./lib/db/
@@ -58,9 +61,10 @@ COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY scripts/package.json             ./scripts/
 RUN pnpm install --frozen-lockfile --prod
 
-# Uploads directory
+# Persistent uploads directory (mount a volume here in production)
 RUN mkdir -p /app/uploads
 
 EXPOSE 8080
 
+# On every start: migrate → seed (if empty) → serve
 CMD ["node", "--enable-source-maps", "./dist/index.mjs"]
