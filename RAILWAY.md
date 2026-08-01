@@ -51,29 +51,11 @@ Railway منصة استضافة سحابية حديثة — أسرع وأسهل 
 
 ---
 
-### الخطوة 5: تشغيل Migrations قاعدة البيانات
+### الخطوة 5: الوصول للموقع ✅ لا يوجد إجراء يدوي
 
-بعد أول نشر ناجح، شغّل migrations:
+> 🎉 **تلقائي 100%** — عند أول تشغيل، المشروع يشغّل قاعدة البيانات ويضيف البيانات الافتراضية (منتجات + مجموعات + إعدادات) تلقائياً.
 
-1. اذهب لـ Service → **"Shell"** (أيقونة الـ terminal في أعلى اليمين)
-2. شغّل:
-```bash
-cd /app && node -e "
-const { migrate } = require('drizzle-orm/node-postgres/migrator');
-const { db } = require('./dist/index.mjs');
-" 
-```
-
-**أو الطريقة الأسهل:** استخدم Railway CLI:
-```bash
-npm install -g @railway/cli
-railway login
-railway run pnpm --filter @workspace/db run push
-```
-
----
-
-### الخطوة 6: الوصول للموقع
+لا تحتاج لتشغيل أي أمر يدوي. فقط انتظر حتى تنتهي عملية البناء وتظهر الـ ✅ في Railway.
 
 بعد نجاح النشر:
 - Railway يعطيك رابط تلقائي مثل: `https://storekit-production.up.railway.app`
