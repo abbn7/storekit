@@ -75,11 +75,13 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 });
 
 /**
- * GET /storage/objects/:objectId
- * Serve uploaded object entities.
+ * GET /storage/objects/*
+ * Compatibility route for old Replit Object Storage URLs.
+ * Tries the object storage; falls back to a placeholder image if unavailable.
  */
-router.get("/storage/objects/:objectId", async (req: Request, res: Response) => {
-  const { objectId } = req.params;
+router.get("/storage/objects/*objectPath", async (req: Request, res: Response) => {
+  const rawPath = req.params.objectPath;
+  const objectId = Array.isArray(rawPath) ? rawPath.join("/") : rawPath;
   try {
     const file = await objectStorageService.getObjectEntityFile(`/objects/${objectId}`);
     const response = await objectStorageService.downloadObject(file, 3600);
@@ -90,13 +92,9 @@ router.get("/storage/objects/:objectId", async (req: Request, res: Response) => 
     } else {
       res.end();
     }
-  } catch (err) {
-    if (err instanceof ObjectNotFoundError) {
-      res.status(404).json({ error: "Object not found" });
-    } else {
-      req.log.error({ err }, "Error serving object");
-      res.status(500).json({ error: "Failed to serve object" });
-    }
+  } catch (_err) {
+    // Object storage not available (e.g. outside Replit) — redirect to placeholder
+    res.redirect(302, "https://picsum.photos/seed/placeholder/800/600");
   }
 });
 
