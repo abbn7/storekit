@@ -26,10 +26,12 @@ import adminPromoCodesRouter from "./admin/promo-codes";
 import stockAlertsRouter from "./stock-alerts";
 import adminStockAlertsRouter from "./admin/stock-alerts";
 import uploadsRouter from "./uploads";
+import configRouter from "./config";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use("/config", configRouter);
 router.use(uploadsRouter);
 router.use(storageRouter);
 router.use("/store-config", storeConfigRouter);

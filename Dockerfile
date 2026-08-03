@@ -38,7 +38,12 @@ RUN pnpm --filter @workspace/api-server run build
 FROM node:24-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Sensible defaults — override any of these in Railway's Variables tab
+ENV NODE_ENV=production \
+    PORT=8080 \
+    FRONTEND_DIST=/app/public \
+    UPLOAD_DIR=/app/uploads \
+    ADMIN_PASSWORD=storekit2024
 
 # Compiled API server
 COPY --from=api-builder  /app/artifacts/api-server/dist  ./dist/

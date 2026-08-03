@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import Layout from "@/components/Layout";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useCartStore } from "@/store/cartStore";
@@ -8,9 +10,11 @@ import { formatPrice } from "@/lib/utils";
 import { useCreateOrder, useCreatePaymentIntent } from "@workspace/api-client-react";
 import { useUser } from "@clerk/react";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import StripePaymentForm from "@/components/checkout/StripePaymentForm";
+import TestPaymentForm from "@/components/checkout/TestPaymentForm";
 
 const STEPS = ["Shipping", "Review", "Payment"];
 
@@ -20,16 +24,25 @@ interface ShippingForm {
   state: string; postalCode: string; country: string;
 }
 
+interface AppConfig {
+  stripePublishableKey: string | null;
+  stripeEnabled: boolean;
+}
+
+// Fetched once and cached here (module-level)
+let stripePromiseCache: ReturnType<typeof loadStripe> | null = null;
+
 function CheckoutContent() {
   const [step, setStep] = useState(0);
   const [shipping, setShipping] = useState<ShippingForm>({
     fullName: "", email: "", phone: "", line1: "", line2: "",
     city: "", state: "", postalCode: "", country: "US",
   });
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   const { items, subtotal, clearCart } = useCartStore();
   const { user } = useUser();
@@ -42,6 +55,19 @@ function CheckoutContent() {
   const tax = Math.round(subtotal * 0.08);
   const total = subtotal + shippingCost + tax;
 
+  // Load app config once on mount
+  useEffect(() => {
+    fetch("/api/config")
+      .then(r => r.json())
+      .then((cfg: AppConfig) => {
+        setAppConfig(cfg);
+        if (cfg.stripeEnabled && cfg.stripePublishableKey && !stripePromiseCache) {
+          stripePromiseCache = loadStripe(cfg.stripePublishableKey);
+        }
+      })
+      .catch(() => setAppConfig({ stripeEnabled: false, stripePublishableKey: null }));
+  }, []);
+
   function handleShippingSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!shipping.fullName || !shipping.line1 || !shipping.city || !shipping.postalCode) {
@@ -51,17 +77,27 @@ function CheckoutContent() {
     setStep(1);
   }
 
-  async function handlePlaceOrder(e: React.FormEvent) {
-    e.preventDefault();
-    if (!cardNumber || !expiry || !cvc) {
-      toast({ title: "Please fill in payment details", variant: "destructive" });
-      return;
-    }
+  // When entering payment step: create a payment intent to get clientSecret
+  async function handleContinueToPayment() {
     setIsSubmitting(true);
     try {
-      const piResult = await createPaymentIntent.mutateAsync({ data: { amount: total, currency: "usd" } });
-      const paymentIntentId = (piResult as any).paymentIntentId ?? "pi_mock";
+      const result = await createPaymentIntent.mutateAsync({
+        data: { amount: total, currency: "usd" },
+      });
+      const data = result as any;
+      setClientSecret(data.clientSecret ?? null);
+      setPaymentIntentId(data.paymentIntentId ?? "pi_mock");
+      setStep(2);
+    } catch {
+      toast({ title: "Could not initialize payment", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
+  async function placeOrder(confirmedPaymentIntentId: string) {
+    setIsCreatingOrder(true);
+    try {
       const orderResult = await createOrder.mutateAsync({
         data: {
           userId: user!.id,
@@ -76,15 +112,19 @@ function CheckoutContent() {
             country: shipping.country,
             phone: shipping.phone,
           },
-          stripePaymentIntentId: paymentIntentId,
+          stripePaymentIntentId: confirmedPaymentIntentId,
         },
       });
       clearCart();
       setLocation(`/order-confirmation/${(orderResult as any).id}`);
-    } catch (err) {
+    } catch {
       toast({ title: "Order failed", description: "Please try again.", variant: "destructive" });
-      setIsSubmitting(false);
+      setIsCreatingOrder(false);
     }
+  }
+
+  async function handleTestPayment() {
+    await placeOrder(paymentIntentId ?? "pi_test");
   }
 
   if (items.length === 0) {
@@ -102,10 +142,17 @@ function CheckoutContent() {
     );
   }
 
+  const stripeEnabled = appConfig?.stripeEnabled && !!stripePromiseCache && !!clientSecret;
+
   return (
     <Layout>
       <div className="max-w-5xl mx-auto px-6 lg:px-8 py-12">
-        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="font-display text-4xl font-light mb-10" style={{ fontFamily: "var(--font-display)" }}>
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="font-display text-4xl font-light mb-10"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
           Checkout
         </motion.h1>
 
@@ -113,8 +160,19 @@ function CheckoutContent() {
         <div className="flex items-center gap-0 mb-12">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-0">
-              <button onClick={() => i < step && setStep(i)} className={`flex items-center gap-2 text-xs tracking-[0.15em] uppercase transition-colors ${i === step ? "text-foreground font-medium" : i < step ? "text-accent cursor-pointer" : "text-muted-foreground"}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] border transition-colors ${i === step ? "bg-foreground text-background border-foreground" : i < step ? "bg-accent text-accent-foreground border-accent" : "border-border text-muted-foreground"}`}>
+              <button
+                onClick={() => i < step && setStep(i)}
+                className={`flex items-center gap-2 text-xs tracking-[0.15em] uppercase transition-colors ${
+                  i === step ? "text-foreground font-medium"
+                  : i < step ? "text-accent cursor-pointer"
+                  : "text-muted-foreground"
+                }`}
+              >
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] border transition-colors ${
+                  i === step ? "bg-foreground text-background border-foreground"
+                  : i < step ? "bg-accent text-accent-foreground border-accent"
+                  : "border-border text-muted-foreground"
+                }`}>
                   {i < step ? "✓" : i + 1}
                 </span>
                 {s}
@@ -127,28 +185,69 @@ function CheckoutContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
+
+              {/* ── Step 0: Shipping ── */}
               {step === 0 && (
-                <motion.form key="shipping" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handleShippingSubmit} className="space-y-4">
+                <motion.form
+                  key="shipping"
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleShippingSubmit}
+                  className="space-y-4"
+                >
                   <h2 className="font-medium tracking-wide mb-6">Shipping Address</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5 col-span-2"><Label>Full Name *</Label><Input value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label>Email</Label><Input type="email" value={shipping.email} onChange={e => setShipping(s => ({ ...s, email: e.target.value }))} /></div>
-                    <div className="space-y-1.5"><Label>Phone</Label><Input value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} /></div>
-                    <div className="space-y-1.5 col-span-2"><Label>Address *</Label><Input value={shipping.line1} onChange={e => setShipping(s => ({ ...s, line1: e.target.value }))} required /></div>
-                    <div className="space-y-1.5 col-span-2"><Label>Apartment, suite, etc.</Label><Input value={shipping.line2} onChange={e => setShipping(s => ({ ...s, line2: e.target.value }))} /></div>
-                    <div className="space-y-1.5"><Label>City *</Label><Input value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label>State</Label><Input value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} /></div>
-                    <div className="space-y-1.5"><Label>Postal Code *</Label><Input value={shipping.postalCode} onChange={e => setShipping(s => ({ ...s, postalCode: e.target.value }))} required /></div>
-                    <div className="space-y-1.5"><Label>Country</Label><Input value={shipping.country} onChange={e => setShipping(s => ({ ...s, country: e.target.value }))} /></div>
+                    <div className="space-y-1.5 col-span-2">
+                      <Label>Full Name *</Label>
+                      <Input value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Email</Label>
+                      <Input type="email" value={shipping.email} onChange={e => setShipping(s => ({ ...s, email: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Phone</Label>
+                      <Input value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5 col-span-2">
+                      <Label>Address *</Label>
+                      <Input value={shipping.line1} onChange={e => setShipping(s => ({ ...s, line1: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5 col-span-2">
+                      <Label>Apartment, suite, etc.</Label>
+                      <Input value={shipping.line2} onChange={e => setShipping(s => ({ ...s, line2: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>City *</Label>
+                      <Input value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>State</Label>
+                      <Input value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Postal Code *</Label>
+                      <Input value={shipping.postalCode} onChange={e => setShipping(s => ({ ...s, postalCode: e.target.value }))} required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Country</Label>
+                      <Input value={shipping.country} onChange={e => setShipping(s => ({ ...s, country: e.target.value }))} />
+                    </div>
                   </div>
-                  <button type="submit" className="flex items-center justify-center gap-2 w-full bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors mt-6">
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center gap-2 w-full bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors mt-6"
+                  >
                     Continue to Review <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.form>
               )}
 
+              {/* ── Step 1: Review ── */}
               {step === 1 && (
-                <motion.div key="review" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <motion.div
+                  key="review"
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                >
                   <h2 className="font-medium tracking-wide mb-6">Review Your Order</h2>
                   <div className="space-y-4 mb-8">
                     {items.map(item => (
@@ -173,51 +272,103 @@ function CheckoutContent() {
                     <p>{shipping.country}</p>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => setStep(0)} className="flex items-center gap-2 px-6 py-4 border border-border text-xs tracking-[0.15em] uppercase hover:bg-muted transition-colors">
+                    <button
+                      onClick={() => setStep(0)}
+                      className="flex items-center gap-2 px-6 py-4 border border-border text-xs tracking-[0.15em] uppercase hover:bg-muted transition-colors"
+                    >
                       <ArrowLeft className="w-4 h-4" /> Back
                     </button>
-                    <button onClick={() => setStep(2)} className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors">
-                      Continue to Payment <ArrowRight className="w-4 h-4" />
+                    <button
+                      onClick={handleContinueToPayment}
+                      disabled={isSubmitting}
+                      className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors disabled:opacity-60"
+                    >
+                      {isSubmitting
+                        ? <><span className="w-4 h-4 border-2 border-background/40 border-t-background rounded-full animate-spin" />Preparing payment…</>
+                        : <>Continue to Payment <ArrowRight className="w-4 h-4" /></>
+                      }
                     </button>
                   </div>
                 </motion.div>
               )}
 
+              {/* ── Step 2: Payment ── */}
               {step === 2 && (
-                <motion.form key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handlePlaceOrder} className="space-y-4">
-                  <h2 className="font-medium tracking-wide mb-6">Payment Details</h2>
-                  <div className="space-y-1.5">
-                    <Label>Card Number</Label>
-                    <Input placeholder="1234 5678 9012 3456" value={cardNumber} onChange={e => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})/g, "$1 ").trim())} maxLength={19} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5"><Label>Expiry</Label><Input placeholder="MM/YY" value={expiry} onChange={e => setExpiry(e.target.value)} maxLength={5} /></div>
-                    <div className="space-y-1.5"><Label>CVC</Label><Input placeholder="123" value={cvc} onChange={e => setCvc(e.target.value)} maxLength={4} /></div>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                    <Lock className="w-3.5 h-3.5" /><span>Your payment information is secure and encrypted</span>
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <button type="button" onClick={() => setStep(1)} className="flex items-center gap-2 px-6 py-4 border border-border text-xs tracking-[0.15em] uppercase hover:bg-muted transition-colors">
-                      <ArrowLeft className="w-4 h-4" /> Back
-                    </button>
-                    <button type="submit" disabled={isSubmitting} className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors disabled:opacity-60">
-                      {isSubmitting ? "Placing Order..." : `Place Order — ${formatPrice(total)}`}
-                    </button>
-                  </div>
-                </motion.form>
+                <motion.div
+                  key="payment"
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                >
+                  {stripeEnabled ? (
+                    <Elements
+                      stripe={stripePromiseCache!}
+                      options={{
+                        clientSecret: clientSecret!,
+                        appearance: {
+                          theme: "stripe",
+                          variables: {
+                            colorPrimary: "#0f0f0f",
+                            colorBackground: "#ffffff",
+                            fontFamily: "inherit",
+                            borderRadius: "2px",
+                          },
+                        },
+                      }}
+                    >
+                      <StripePaymentForm
+                        onSuccess={placeOrder}
+                        onBack={() => setStep(1)}
+                        total={total}
+                        formatPrice={formatPrice}
+                        isCreatingOrder={isCreatingOrder}
+                      />
+                    </Elements>
+                  ) : (
+                    <TestPaymentForm
+                      onSubmit={handleTestPayment}
+                      onBack={() => setStep(1)}
+                      total={total}
+                      formatPrice={formatPrice}
+                      isSubmitting={isCreatingOrder}
+                    />
+                  )}
+                </motion.div>
               )}
+
             </AnimatePresence>
           </div>
 
+          {/* ── Order Summary ── */}
           <div className="bg-card border border-border p-6 h-fit">
             <h3 className="text-sm font-medium tracking-[0.1em] uppercase mb-5">Summary</h3>
-            <div className="space-y-2.5 text-sm mb-5 pb-5 border-b border-border">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>{formatPrice(tax)}</span></div>
+            <div className="space-y-3 text-sm mb-5 pb-5 border-b border-border">
+              {items.slice(0, 3).map(item => (
+                <div key={item.id} className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate">{item.productName} ×{item.quantity}</span>
+                  <span className="shrink-0">{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
+              {items.length > 3 && (
+                <p className="text-xs text-muted-foreground">+{items.length - 3} more item{items.length - 3 > 1 ? "s" : ""}</p>
+              )}
             </div>
-            <div className="flex justify-between font-medium"><span>Total</span><span>{formatPrice(total)}</span></div>
+            <div className="space-y-2.5 text-sm mb-5 pb-5 border-b border-border">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatPrice(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tax (8%)</span>
+                <span>{formatPrice(tax)}</span>
+              </div>
+            </div>
+            <div className="flex justify-between font-medium text-sm">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
           </div>
         </div>
       </div>

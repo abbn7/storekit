@@ -16,9 +16,10 @@ function verifyAdminAuth(req: any, res: any): boolean {
 router.post("/login", async (req, res): Promise<void> => {
   try {
     const { password } = req.body;
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    // Default password so the store works on first deploy without any config
+    const adminPassword = process.env.ADMIN_PASSWORD ?? "storekit2024";
 
-    if (!adminPassword || password !== adminPassword) {
+    if (password !== adminPassword) {
       res.status(401).json({ error: "Invalid password" });
       return;
     }

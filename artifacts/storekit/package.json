@@ -76,6 +76,8 @@
   },
   "dependencies": {
     "@clerk/react": "^6.4.7",
+    "@stripe/react-stripe-js": "^6.8.0",
+    "@stripe/stripe-js": "^9.12.1",
     "i18next": "^26.0.8",
     "react-i18next": "^17.0.6",
     "zustand": "^5.0.12"
