@@ -109,7 +109,7 @@ export default function QuickViewModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="fixed inset-0 z-[80] bg-foreground/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[80] bg-foreground/45"
             onClick={close}
           />
 
@@ -120,12 +120,12 @@ export default function QuickViewModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 48, scale: 0.97 }}
             transition={{ duration: 0.45, ease: luxury }}
-            className="mobile-quickview glass-card fixed inset-x-2 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[800px] sm:max-h-[90vh] z-[81] rounded-t-[1.5rem] sm:rounded-[1.5rem] shadow-2xl flex flex-col sm:flex-row overflow-hidden max-h-[92svh]"
+            className="mobile-quickview bg-background border border-border fixed inset-x-2 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[800px] sm:max-h-[90vh] z-[81] rounded-t-lg sm:rounded-sm shadow-2xl flex flex-col sm:flex-row overflow-hidden max-h-[92svh]"
           >
             {/* Close */}
             <button
               onClick={close}
-              className="icon-glass absolute top-4 right-4 z-10"
+              className="bg-background/95 absolute top-4 right-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-border"
               aria-label={t("product.close")}
             >
               <X className="w-4 h-4" />
@@ -150,8 +150,8 @@ export default function QuickViewModal() {
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                  {hasDiscount && <span className="glass-dark text-background text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase">{t("product.sale")}</span>}
-                  {product.isNewArrival && <span className="bg-accent text-accent-foreground text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase shadow-lg">{t("product.new")}</span>}
+                  {hasDiscount && <span className="bg-foreground text-background text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-sm uppercase">{t("product.sale")}</span>}
+                  {product.isNewArrival && <span className="bg-accent text-accent-foreground text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-sm uppercase">{t("product.new")}</span>}
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ export default function QuickViewModal() {
                   disabled={!selectedVariant || !isInStock || added}
                   whileHover={selectedVariant && isInStock && !added ? { scale: 1.01 } : {}}
                   whileTap={selectedVariant && isInStock && !added ? { scale: 0.98 } : {}}
-                                      className={`flex-1 h-12 rounded-full text-[11px] tracking-[0.2em] uppercase transition-all duration-300 luxury-glow ${
+                                      className={`flex-1 h-12 rounded-sm text-[11px] tracking-[0.2em] uppercase transition-all duration-300 ${
 
                     added
                       ? "bg-green-600 text-white"
@@ -275,7 +275,7 @@ export default function QuickViewModal() {
                 {/* Wishlist */}
                 <motion.button
                   onClick={() => inWishlist ? removeFromWishlist(product.id) : addToWishlist(product.id)}
-                  className="icon-glass !w-12 !h-12 flex-shrink-0"
+                  className="bg-background inline-flex !w-12 !h-12 flex-shrink-0 items-center justify-center rounded-sm border border-border"
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.92 }}
                 >

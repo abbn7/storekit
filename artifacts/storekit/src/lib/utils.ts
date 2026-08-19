@@ -18,6 +18,14 @@ const FASHION_IMAGE_FALLBACKS = [
   "/images/fashion/fashion-editorial.jpg",
 ];
 
+const COLLECTION_IMAGE_MAP: Record<string, string> = {
+  "new-arrivals": "/images/fashion/editorial-black.jpg",
+  essentials: "/images/fashion/fashion-product.jpg",
+  outerwear: "/images/fashion/minimal-outfit.jpg",
+  knitwear: "/images/fashion/fashion-editorial.jpg",
+  accessories: "/images/fashion/lookbook-grey.jpg",
+};
+
 export function getProductImage(url: string | null | undefined, productId?: string): string {
   const candidate = url?.trim();
   if (candidate && !candidate.includes("picsum.photos")) return candidate;
@@ -26,6 +34,13 @@ export function getProductImage(url: string | null | undefined, productId?: stri
   const source = `${productId ?? "default"}:${candidate ?? "fallback"}`;
   const hash = Array.from(source).reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return FASHION_IMAGE_FALLBACKS[hash % FASHION_IMAGE_FALLBACKS.length];
+}
+
+export function getCollectionImage(url: string | null | undefined, slug?: string): string {
+  const candidate = url?.trim();
+  if (candidate && !candidate.includes("picsum.photos")) return candidate;
+  if (slug && COLLECTION_IMAGE_MAP[slug]) return COLLECTION_IMAGE_MAP[slug];
+  return getProductImage(candidate, slug);
 }
 
 export function slugify(text: string): string {

@@ -327,7 +327,7 @@ export default function ProductDetailPage() {
                 role="button"
                 tabIndex={0}
                 aria-label={t("product.zoomImage")}
-                className="relative aspect-[3/4] overflow-hidden rounded-[1.5rem] bg-muted cursor-zoom-in group shadow-lg"
+                className="relative aspect-[3/4] overflow-hidden rounded-sm bg-muted cursor-zoom-in group"
                 onClick={() => setIsZoomed(!isZoomed)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsZoomed(value => !value); } }}
               >
@@ -345,7 +345,7 @@ export default function ProductDetailPage() {
                 </AnimatePresence>
 
                 <motion.div
-                  className="icon-glass absolute top-4 right-4 pointer-events-none"
+                  className="bg-background/90 absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-border pointer-events-none"
                   animate={{ opacity: isZoomed ? 0 : 1 }}
                   transition={{ duration: 0.3 }}
                 >
@@ -353,16 +353,16 @@ export default function ProductDetailPage() {
                 </motion.div>
 
                 <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  {hasDiscount && <span className="glass-dark text-background text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase">{t("product.sale")}</span>}
-                  {product.isNewArrival && <span className="bg-accent text-accent-foreground text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase shadow-lg">{t("product.new")}</span>}
+                  {hasDiscount && <span className="bg-foreground text-background text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-sm uppercase">{t("product.sale")}</span>}
+                  {product.isNewArrival && <span className="bg-accent text-accent-foreground text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-sm uppercase">{t("product.new")}</span>}
                 </div>
 
                 {images.length > 1 && (
                   <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none lg:hidden">
-                    <motion.button aria-label={t("product.previousImage")} className="icon-glass pointer-events-auto" onClick={(e) => { e.stopPropagation(); setSelectedImage(i => Math.max(0, i - 1)); }} whileTap={{ scale: 0.9 }}>
+                    <motion.button aria-label={t("product.previousImage")} className="bg-background/90 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-border pointer-events-auto" onClick={(e) => { e.stopPropagation(); setSelectedImage(i => Math.max(0, i - 1)); }} whileTap={{ scale: 0.9 }}>
                       <ChevronLeft className="w-4 h-4" />
                     </motion.button>
-                    <motion.button aria-label={t("product.nextImage")} className="icon-glass pointer-events-auto" onClick={(e) => { e.stopPropagation(); setSelectedImage(i => Math.min(images.length - 1, i + 1)); }} whileTap={{ scale: 0.9 }}>
+                    <motion.button aria-label={t("product.nextImage")} className="bg-background/90 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-border pointer-events-auto" onClick={(e) => { e.stopPropagation(); setSelectedImage(i => Math.min(images.length - 1, i + 1)); }} whileTap={{ scale: 0.9 }}>
                       <ChevronRight className="w-4 h-4" />
                     </motion.button>
                   </div>
@@ -387,7 +387,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ── Product info ─────────────────────────────────── */}
-                      <div className="glass-card rounded-[1.5rem] p-6 lg:p-8 lg:pt-8">
+                      <div className="bg-card border-y border-border/70 p-6 lg:p-8 lg:pt-8">
 
             {/* Tag */}
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: luxury }}
@@ -483,7 +483,7 @@ export default function ProductDetailPage() {
             {/* Qty + CTA */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.42, ease: luxury }} className="space-y-3 mb-8">
               <div className="flex gap-3">
-                <div className="flex items-center rounded-full border border-border h-12 overflow-hidden">
+                <div className="flex items-center rounded-sm border border-border h-12 overflow-hidden">
                   <motion.button aria-label={t("cart.decreaseQuantity")} onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 h-full hover:bg-muted transition-colors text-lg leading-none" whileTap={{ scale: 0.88 }}>−</motion.button>
                   <AnimatePresence mode="wait">
                     <motion.span key={qty} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} className="px-4 text-sm tabular-nums min-w-[3rem] text-center">{qty}</motion.span>
@@ -495,13 +495,13 @@ export default function ProductDetailPage() {
                   ref={ctaRef}
                   onClick={handleAddToCart}
                   disabled={!isInStock && !!selectedVariant}
-                  className="flex-1 h-12 rounded-full bg-foreground text-background text-[11px] tracking-[0.2em] uppercase hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed luxury-glow"
+                  className="flex-1 h-12 rounded-sm bg-foreground text-background text-[11px] tracking-[0.2em] uppercase hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                   {ctaLabel}
                 </motion.button>
 
                 <motion.button aria-label={inWishlist ? t("product.removeFromWishlist") : t("product.addToWishlist")} onClick={() => inWishlist ? removeFromWishlist(product.id) : addToWishlist(product.id)}
-                  className="icon-glass !w-12 !h-12"
+                  className="bg-background inline-flex !w-12 !h-12 items-center justify-center rounded-sm border border-border"
                   whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }}>
                   <motion.div animate={inWishlist ? { scale: [1, 1.4, 1] } : {}} transition={{ duration: 0.35 }}>
                     <Heart className={`w-5 h-5 transition-colors ${inWishlist ? "fill-foreground text-foreground" : ""}`} />
@@ -538,7 +538,7 @@ export default function ProductDetailPage() {
 
             {/* Trust badges */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5, ease: luxury }}
-                            className="glass-card rounded-2xl flex flex-col gap-3 mb-8 p-4 pb-5 border-b border-border/60"
+                            className="border-y border-border/60 flex flex-col gap-3 mb-8 p-4 pb-5"
 >
               {([
                 [Truck, t("product.freeShipping")],

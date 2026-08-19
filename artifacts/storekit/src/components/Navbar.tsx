@@ -59,15 +59,15 @@ export default function Navbar() {
   }
 
   /* ── Shared icon button ─────────────────────────────────────── */
-  const iconBtn = "icon-glass text-foreground/70 hover:text-foreground";
+  const iconBtn = "inline-flex h-10 min-w-10 items-center justify-center border-b border-transparent text-foreground/70 transition-colors hover:border-accent hover:text-foreground";
 
   return (
     <>
       <motion.nav
         className={`site-nav fixed top-[var(--announcement-height)] left-0 right-0 z-40 transition-all duration-500 ${
                       isScrolled
-            ? "glass-surface border-b border-border/45 shadow-lg"
-            : "bg-background/72 backdrop-blur-xl border-b border-border/25"
+            ? "bg-background border-b border-border/70 shadow-sm"
+            : "bg-background/96 border-b border-border/35"
 
         }`}
         animate={{ y: isHidden ? -120 : 0 }}
@@ -112,7 +112,7 @@ export default function Navbar() {
             </div>
 
             {/* Desktop icons */}
-            <div className="hidden lg:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-2">
 
               {/* Search */}
               <Link href="/search" aria-label={t("nav.search")} title={t("nav.search")}>
@@ -169,7 +169,7 @@ export default function Navbar() {
                       exit={{ opacity: 0, y: -8, scale: 0.95 }}
                       transition={{ duration: 0.18 }}
                       onMouseLeave={() => setShowLangMenu(false)}
-                      className="glass-card absolute top-full mt-3 right-0 rounded-2xl shadow-xl overflow-hidden min-w-[132px] p-1"
+                      className="bg-background absolute top-full mt-3 right-0 rounded-sm border border-border shadow-lg overflow-hidden min-w-[132px] p-1"
                     >
                       {(["en", "ar"] as const).map((lang) => (
                         <button
@@ -226,7 +226,7 @@ export default function Navbar() {
               {/* Cart */}
               <motion.button
                 onClick={openCart}
-                className={`relative icon-glass`}
+                className={`relative inline-flex h-10 min-w-10 items-center justify-center border-b border-transparent text-foreground/70 transition-colors hover:border-accent hover:text-foreground`}
                 aria-label={t("nav.cart")}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.92 }}
@@ -286,7 +286,7 @@ export default function Navbar() {
             animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
             exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.45, ease: luxury }}
-            className="noise-overlay fixed inset-0 z-30 bg-background/98 backdrop-blur-2xl pt-[calc(var(--announcement-height)+var(--nav-height))] pb-[var(--safe-bottom)] flex flex-col"
+            className="fixed inset-0 z-30 bg-background pt-[calc(var(--announcement-height)+var(--nav-height))] pb-[var(--safe-bottom)] flex flex-col"
           >
             <div className="flex flex-col items-center justify-center flex-1 gap-8">
               {navLinks.map((link, i) => (
@@ -317,7 +317,7 @@ export default function Navbar() {
                   <button
                     key={lang}
                     onClick={() => handleLangSwitch(lang)}
-                    className={`px-4 py-2 text-sm border rounded-full transition-all ${
+                    className={`px-4 py-2 text-sm border rounded-sm transition-all ${
                       currentLang === lang
                         ? "border-foreground bg-foreground text-background"
                         : "border-border text-muted-foreground hover:border-foreground"

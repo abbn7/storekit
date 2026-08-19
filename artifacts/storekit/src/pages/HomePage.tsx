@@ -9,7 +9,7 @@ import {
   useListCollections,
   useListTestimonials,
 } from "@workspace/api-client-react";
-import { getProductImage } from "@/lib/utils";
+import { getCollectionImage, getProductImage } from "@/lib/utils";
 import { Star, ArrowRight } from "lucide-react";
 import { luxury, staggerContainer, staggerItem } from "@/lib/animations";
 import { useTranslation } from "react-i18next";
@@ -217,12 +217,12 @@ function FeaturedCollections({ collections }: { collections: any[] }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.7, delay: i * 0.12, ease: luxury }}
-            className={`relative overflow-hidden rounded-[12px] group ${i === 0 ? "md:row-span-2" : ""}`}
+            className="relative overflow-hidden rounded-sm group"
           >
             <Link href={`/collections/${col.slug}`}>
-              <div className={`${i === 0 ? "aspect-[3/4]" : "aspect-[4/3]"} overflow-hidden rounded-[12px] bg-muted`}>
+              <div className="aspect-[4/5] overflow-hidden rounded-sm bg-muted">
                 <motion.img
-                  src={getProductImage(col.imageUrl, col.id)}
+                  src={getCollectionImage(col.imageUrl, col.slug)}
                   alt={localized.name}
                   className="w-full h-full object-cover"
                   whileHover={{ scale: 1.03 }}
@@ -338,7 +338,7 @@ function EditorialSection() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8, ease: luxury }}
-          className="aspect-[4/5] overflow-hidden rounded-[12px] bg-muted luxury-glow"
+          className="aspect-[4/5] overflow-hidden rounded-sm bg-muted"
         >
           <motion.img
             src="/images/fashion/fashion-editorial.jpg"
@@ -374,7 +374,7 @@ function EditorialSection() {
           >
             <Link
               href="/collections"
-              className="inline-flex items-center gap-3 rounded-full bg-foreground text-background px-8 py-4 text-[11px] tracking-[0.22em] uppercase hover:bg-accent hover:text-accent-foreground transition-colors luxury-glow"
+              className="group inline-flex min-h-11 items-center gap-3 border-b border-foreground pb-2 text-[11px] tracking-[0.2em] uppercase text-foreground hover:border-accent hover:text-accent transition-colors"
             >
               {t("home.exploreCollection")}
               <ArrowRight className={`w-4 h-4 ${i18n.language === "ar" ? "rotate-180" : ""}`} />
@@ -402,7 +402,7 @@ function StatsRow() {
         initial="initial"
         whileInView="animate"
         viewport={{ once: true }}
-                  className="glass-card max-w-5xl mx-6 lg:mx-auto rounded-2xl px-6 py-8 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center"
+                  className="max-w-5xl mx-6 lg:mx-auto border-y border-border/70 px-4 py-8 grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-4 text-center"
 
       >
         {stats.map((s, i) => (
@@ -441,9 +441,7 @@ function TestimonialsSection({ testimonials }: { testimonials: any[] }) {
             <motion.div
               key={t.id}
               variants={staggerItem}
-              className="glass-card rounded-2xl p-8 flex flex-col hover-lift"
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.3, ease: luxury }}
+              className="bg-background p-8 flex flex-col border-t border-border/75"
             >
               <div className="flex gap-0.5 mb-5">
                 {[...Array(t.rating)].map((_, s) => (

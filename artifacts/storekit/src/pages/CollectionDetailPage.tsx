@@ -4,7 +4,7 @@ import { useParams } from "wouter";
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
 import { useGetCollectionBySlug, useListProducts } from "@workspace/api-client-react";
-import { getProductImage, formatPrice } from "@/lib/utils";
+import { getCollectionImage, getProductImage, formatPrice } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { luxury, staggerContainer } from "@/lib/animations";
 import { SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react";
@@ -130,7 +130,7 @@ export default function CollectionDetailPage() {
             {collection && (
               <>
                 <motion.img
-                  src={getProductImage(collection.imageUrl, collection.id)}
+                  src={getCollectionImage(collection.imageUrl, collection.slug)}
                   alt={localizedCollection?.name ?? collection.name}
                   className="w-full h-full object-cover"
                   initial={{ scale: 1.08 }}

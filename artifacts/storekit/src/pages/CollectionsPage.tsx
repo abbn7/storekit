@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { useListCollections } from "@workspace/api-client-react";
-import { getProductImage } from "@/lib/utils";
+import { getCollectionImage } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { localizeCatalogText } from "@/lib/catalogI18n";
 
@@ -47,7 +47,7 @@ export default function CollectionsPage() {
                 <Link href={`/collections/${col.slug}`}>
                   <div className="relative aspect-[3/4] overflow-hidden bg-muted mb-4">
                     <img
-                      src={getProductImage(col.imageUrl, col.id)}
+                      src={getCollectionImage(col.imageUrl, col.slug)}
                       alt={localized.name}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />

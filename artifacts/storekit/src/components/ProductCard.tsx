@@ -87,13 +87,13 @@ export default function ProductCard({
       initial="initial"
       whileInView="animate"
       viewport={{ once: true, margin: "-60px" }}
-      className="group relative hover-lift"
+      className="group relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setIsActionsOpen(false); setShowSizes(false); }}
     >
       <div>
         {/* Image container */}
-        <div className="relative aspect-[3/4] overflow-hidden rounded-[1.25rem] bg-muted shadow-sm">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-muted">
           <Link
             href={`/products/${slug}`}
             aria-label={displayName}
@@ -154,7 +154,7 @@ export default function ProductCard({
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 }}
-                className="bg-accent/90 text-accent-foreground text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase shadow-lg"
+                className="bg-accent text-accent-foreground text-[10px] tracking-[0.14em] px-2.5 py-1 rounded-sm uppercase"
               >
                 {t("product.new")}
               </motion.span>
@@ -164,7 +164,7 @@ export default function ProductCard({
           {/* Wishlist button */}
           <motion.button
             onClick={handleWishlist}
-            className="bg-background/95 absolute top-3 right-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60"
+            className="bg-background absolute top-3 right-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-border/70"
             animate={{ opacity: revealActions ? 1 : 0, scale: revealActions ? 1 : 0.85 }}
             transition={{ duration: 0.25, ease: luxury }}
             whileTap={{ scale: 0.9 }}
@@ -185,7 +185,7 @@ export default function ProductCard({
               e.stopPropagation();
               openQuickView({ id, slug, name: displayName, basePrice, compareAtPrice, images, variants, isFeatured, isNewArrival });
             }}
-            className="bg-background/95 absolute top-3 right-[3.6rem] z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60"
+            className="bg-background absolute top-3 right-[3.6rem] z-10 inline-flex h-10 w-10 items-center justify-center rounded-sm border border-border/70"
             animate={{ opacity: revealActions ? 1 : 0, scale: revealActions ? 1 : 0.85 }}
             transition={{ duration: 0.25, ease: luxury, delay: 0.04 }}
             whileTap={{ scale: 0.9 }}
@@ -203,7 +203,7 @@ export default function ProductCard({
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ duration: 0.3, ease: luxury }}
-                className="bg-background/95 absolute bottom-0 left-0 right-0 rounded-b-[12px] border-t border-border p-3 z-10"
+                className="bg-background absolute bottom-0 left-0 right-0 border-t border-border p-3 z-10"
               >
                 <AnimatePresence mode="wait">
                   {!showSizes ? (
@@ -274,7 +274,7 @@ export default function ProductCard({
         )}
 
         {/* Product info */}
-        <div className="mt-3 space-y-1 px-1">
+        <div className="mt-4 space-y-1 px-1">
           <Link href={`/products/${slug}`} className="block" aria-label={displayName}>
             <h3 className="text-sm font-medium tracking-wide text-foreground leading-snug">
             <span className="relative inline-block">
@@ -289,9 +289,9 @@ export default function ProductCard({
           </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{formatPrice(basePrice)}</span>
+              <span className="text-[13px] tracking-[0.04em] font-medium">{formatPrice(basePrice)}</span>
               {hasDiscount && (
-                <span className="text-sm text-muted-foreground line-through">{formatPrice(compareAtPrice!)}</span>
+                <span className="text-[13px] tracking-[0.04em] text-muted-foreground line-through">{formatPrice(compareAtPrice!)}</span>
               )}
             </div>
 
