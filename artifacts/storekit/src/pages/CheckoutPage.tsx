@@ -15,8 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import StripePaymentForm from "@/components/checkout/StripePaymentForm";
 import TestPaymentForm from "@/components/checkout/TestPaymentForm";
+import { useTranslation } from "react-i18next";
 
-const STEPS = ["Shipping", "Review", "Payment"];
+
 
 interface ShippingForm {
   fullName: string; email: string; phone: string;
@@ -33,6 +34,8 @@ interface AppConfig {
 let stripePromiseCache: ReturnType<typeof loadStripe> | null = null;
 
 function CheckoutContent() {
+  const { t } = useTranslation();
+  const steps = [t("checkout.shipping"), t("checkout.review"), t("checkout.payment")];
   const [step, setStep] = useState(0);
   const [shipping, setShipping] = useState<ShippingForm>({
     fullName: "", email: "", phone: "", line1: "", line2: "",
@@ -71,7 +74,7 @@ function CheckoutContent() {
   function handleShippingSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!shipping.fullName || !shipping.line1 || !shipping.city || !shipping.postalCode) {
-      toast({ title: "Please fill in all required fields", variant: "destructive" });
+      toast({ title: t("checkout.requiredFields"), variant: "destructive" });
       return;
     }
     setStep(1);
@@ -89,7 +92,7 @@ function CheckoutContent() {
       setPaymentIntentId(data.paymentIntentId ?? "pi_mock");
       setStep(2);
     } catch {
-      toast({ title: "Could not initialize payment", description: "Please try again.", variant: "destructive" });
+      toast({ title: t("checkout.paymentInitError"), description: t("checkout.pleaseTryAgain"), variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -118,7 +121,7 @@ function CheckoutContent() {
       clearCart();
       setLocation(`/order-confirmation/${(orderResult as any).id}`);
     } catch {
-      toast({ title: "Order failed", description: "Please try again.", variant: "destructive" });
+      toast({ title: t("checkout.orderFailed"), description: t("checkout.pleaseTryAgain"), variant: "destructive" });
       setIsCreatingOrder(false);
     }
   }
@@ -132,10 +135,10 @@ function CheckoutContent() {
       <Layout>
         <div className="max-w-2xl mx-auto px-6 py-24 text-center">
           <p className="font-display text-3xl font-light text-muted-foreground mb-6" style={{ fontFamily: "var(--font-display)" }}>
-            Your bag is empty
+            {t("cart.empty")}
           </p>
           <a href="/collections" className="inline-block bg-foreground text-background px-8 py-4 text-xs tracking-[0.2em] uppercase">
-            Shop Now
+            {t("checkout.shopNow")}
           </a>
         </div>
       </Layout>
@@ -153,12 +156,12 @@ function CheckoutContent() {
           className="font-display text-4xl font-light mb-10"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Checkout
+          {t("checkout.title")}
         </motion.h1>
 
         {/* Step indicators */}
         <div className="flex items-center gap-0 mb-12">
-          {STEPS.map((s, i) => (
+          {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-0">
               <button
                 onClick={() => i < step && setStep(i)}
@@ -177,7 +180,7 @@ function CheckoutContent() {
                 </span>
                 {s}
               </button>
-              {i < STEPS.length - 1 && <div className="w-12 h-px bg-border mx-3" />}
+              {i < steps.length - 1 && <div className="w-12 h-px bg-border mx-3" />}
             </div>
           ))}
         </div>
@@ -194,42 +197,42 @@ function CheckoutContent() {
                   onSubmit={handleShippingSubmit}
                   className="space-y-4"
                 >
-                  <h2 className="font-medium tracking-wide mb-6">Shipping Address</h2>
+                  <h2 className="font-medium tracking-wide mb-6">{t("checkout.shippingAddress")}</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5 col-span-2">
-                      <Label>Full Name *</Label>
+                      <Label>{t("checkout.fullName")} *</Label>
                       <Input value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} required />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Email</Label>
+                      <Label>{t("checkout.email")}</Label>
                       <Input type="email" value={shipping.email} onChange={e => setShipping(s => ({ ...s, email: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Phone</Label>
+                      <Label>{t("checkout.phone")}</Label>
                       <Input value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5 col-span-2">
-                      <Label>Address *</Label>
+                      <Label>{t("checkout.address")} *</Label>
                       <Input value={shipping.line1} onChange={e => setShipping(s => ({ ...s, line1: e.target.value }))} required />
                     </div>
                     <div className="space-y-1.5 col-span-2">
-                      <Label>Apartment, suite, etc.</Label>
+                      <Label>{t("checkout.apartment")}</Label>
                       <Input value={shipping.line2} onChange={e => setShipping(s => ({ ...s, line2: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>City *</Label>
+                      <Label>{t("checkout.city")} *</Label>
                       <Input value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} required />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>State</Label>
+                      <Label>{t("checkout.state")}</Label>
                       <Input value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Postal Code *</Label>
+                      <Label>{t("checkout.postalCode")} *</Label>
                       <Input value={shipping.postalCode} onChange={e => setShipping(s => ({ ...s, postalCode: e.target.value }))} required />
                     </div>
                     <div className="space-y-1.5">
-                      <Label>Country</Label>
+                      <Label>{t("checkout.country")}</Label>
                       <Input value={shipping.country} onChange={e => setShipping(s => ({ ...s, country: e.target.value }))} />
                     </div>
                   </div>
@@ -237,7 +240,7 @@ function CheckoutContent() {
                     type="submit"
                     className="flex items-center justify-center gap-2 w-full bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors mt-6"
                   >
-                    Continue to Review <ArrowRight className="w-4 h-4" />
+                    {t("checkout.continueReview")} <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.form>
               )}
@@ -248,7 +251,7 @@ function CheckoutContent() {
                   key="review"
                   initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 >
-                  <h2 className="font-medium tracking-wide mb-6">Review Your Order</h2>
+                  <h2 className="font-medium tracking-wide mb-6">{t("checkout.reviewOrder")}</h2>
                   <div className="space-y-4 mb-8">
                     {items.map(item => (
                       <div key={item.id} className="flex gap-4 pb-4 border-b border-border">
@@ -265,7 +268,7 @@ function CheckoutContent() {
                     ))}
                   </div>
                   <div className="bg-muted p-5 mb-6 text-sm space-y-1">
-                    <p className="font-medium mb-2">Shipping to:</p>
+                    <p className="font-medium mb-2">{t("checkout.shippingTo")}</p>
                     <p>{shipping.fullName}</p>
                     <p>{shipping.line1}{shipping.line2 ? `, ${shipping.line2}` : ""}</p>
                     <p>{shipping.city}, {shipping.state} {shipping.postalCode}</p>
@@ -276,7 +279,7 @@ function CheckoutContent() {
                       onClick={() => setStep(0)}
                       className="flex items-center gap-2 px-6 py-4 border border-border text-xs tracking-[0.15em] uppercase hover:bg-muted transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4" /> Back
+                      <ArrowLeft className="w-4 h-4" /> {t("checkout.back")}
                     </button>
                     <button
                       onClick={handleContinueToPayment}
@@ -284,8 +287,8 @@ function CheckoutContent() {
                       className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors disabled:opacity-60"
                     >
                       {isSubmitting
-                        ? <><span className="w-4 h-4 border-2 border-background/40 border-t-background rounded-full animate-spin" />Preparing payment…</>
-                        : <>Continue to Payment <ArrowRight className="w-4 h-4" /></>
+                        ? <><span className="w-4 h-4 border-2 border-background/40 border-t-background rounded-full animate-spin" />{t("checkout.preparingPayment")}</>
+                        : <>{t("checkout.continuePayment")} <ArrowRight className="w-4 h-4" /></>
                       }
                     </button>
                   </div>
@@ -339,7 +342,7 @@ function CheckoutContent() {
 
           {/* ── Order Summary ── */}
           <div className="bg-card border border-border p-6 h-fit">
-            <h3 className="text-sm font-medium tracking-[0.1em] uppercase mb-5">Summary</h3>
+            <h3 className="text-sm font-medium tracking-[0.1em] uppercase mb-5">{t("checkout.summary")}</h3>
             <div className="space-y-3 text-sm mb-5 pb-5 border-b border-border">
               {items.slice(0, 3).map(item => (
                 <div key={item.id} className="flex justify-between gap-2">
@@ -348,25 +351,25 @@ function CheckoutContent() {
                 </div>
               ))}
               {items.length > 3 && (
-                <p className="text-xs text-muted-foreground">+{items.length - 3} more item{items.length - 3 > 1 ? "s" : ""}</p>
+                <p className="text-xs text-muted-foreground">+{items.length - 3} {t("checkout.moreItems")}</p>
               )}
             </div>
             <div className="space-y-2.5 text-sm mb-5 pb-5 border-b border-border">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span>
+                <span className="text-muted-foreground">{t("cart.shipping")}</span>
+                <span>{shippingCost === 0 ? t("cart.free") : formatPrice(shippingCost)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax (8%)</span>
+                <span className="text-muted-foreground">{t("cart.tax")}</span>
                 <span>{formatPrice(tax)}</span>
               </div>
             </div>
             <div className="flex justify-between font-medium text-sm">
-              <span>Total</span>
+              <span>{t("cart.total")}</span>
               <span>{formatPrice(total)}</span>
             </div>
           </div>

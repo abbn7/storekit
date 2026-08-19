@@ -37,14 +37,26 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+if (process.env.CLERK_SECRET_KEY) {
+  app.use(
+    clerkMiddleware((req) => ({
+      publishableKey: publishableKeyFromHost(
+        getClerkProxyHost(req) ?? "",
+        process.env.CLERK_PUBLISHABLE_KEY,
+      ),
+    })),
+  );
+} else {
+  logger.warn("CLERK_SECRET_KEY is not configured; Clerk authentication is disabled for this local run.");
+}
+
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ ok: true, service: "storekit", environment: process.env.NODE_ENV ?? "development" });
+});
+
+app.get("/healthz", (_req, res) => {
+  res.status(200).type("text/plain").send("ok");
+});
 
 app.use("/api", router);
 
@@ -54,9 +66,24 @@ app.use("/api", router);
 const frontendDist = process.env.FRONTEND_DIST;
 if (frontendDist && fs.existsSync(frontendDist)) {
   logger.info({ frontendDist }, "Serving static frontend");
-  app.use(express.static(frontendDist, { maxAge: "1y", immutable: true }));
-  // SPA fallback — all non-API routes go to index.html
-  app.get("*", (_req, res) => {
+  app.use(
+    express.static(frontendDist, {
+      setHeaders(res, filePath) {
+        if (path.basename(filePath) === "index.html") {
+          res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+        } else {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    }),
+  );
+  // SPA fallback — all non-API routes go to index.html without allowing stale HTML shells.
+  app.get("/{*splat}", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     res.sendFile(path.resolve(frontendDist, "index.html"));
   });
 }

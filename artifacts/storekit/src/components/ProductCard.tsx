@@ -8,6 +8,8 @@ import { useCartStore } from "@/store/cartStore";
 import { useQuickViewStore } from "@/store/quickViewStore";
 import { useCompareStore } from "@/store/compareStore";
 import { luxury, staggerItem } from "@/lib/animations";
+import { useTranslation } from "react-i18next";
+import { localizeCatalogText } from "@/lib/catalogI18n";
 
 interface ProductCardProps {
   id: string;
@@ -27,7 +29,12 @@ export default function ProductCard({
   id, slug, name, basePrice, compareAtPrice, images, variants = [],
   isFeatured, isNewArrival, index = 0, viewMode = "grid"
 }: ProductCardProps) {
+  const { t, i18n } = useTranslation();
+  const displayName = localizeCatalogText({ slug, name }, i18n.language).name ?? name;
   const [isHovered, setIsHovered] = useState(false);
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isTouchDevice] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(hover: none)").matches);
+  const revealActions = isHovered || isActionsOpen;
   const [showSizes, setShowSizes] = useState(false);
   const [addedVariantId, setAddedVariantId] = useState<string | null>(null);
   const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
@@ -53,7 +60,7 @@ export default function ProductCard({
     addItem({
       productId: id,
       variantId: variant.id,
-      productName: name,
+      productName: displayName,
       variantLabel: `${variant.size} / ${variant.color}`,
       imageUrl: primaryImage,
       price: variant.price,
@@ -80,17 +87,28 @@ export default function ProductCard({
       initial="initial"
       whileInView="animate"
       viewport={{ once: true, margin: "-60px" }}
-      className="group relative"
+      className="group relative hover-lift"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setShowSizes(false); }}
+      onMouseLeave={() => { setIsHovered(false); setIsActionsOpen(false); setShowSizes(false); }}
     >
-      <Link href={`/products/${slug}`}>
+      <div>
         {/* Image container */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-[1.25rem] bg-muted shadow-sm">
+          <Link
+            href={`/products/${slug}`}
+            aria-label={displayName}
+            className="absolute inset-0 z-0"
+            onClick={(event) => {
+              if (isTouchDevice && !isActionsOpen) {
+                event.preventDefault();
+                setIsActionsOpen(true);
+              }
+            }}
+          />
           {/* Primary image */}
           <motion.img
             src={primaryImage}
-            alt={images[0]?.alt ?? name}
+            alt={images[0]?.alt ?? displayName}
             className="absolute inset-0 w-full h-full object-cover"
             animate={{
               opacity: isHovered && hasSecondImage ? 0 : 1,
@@ -103,7 +121,7 @@ export default function ProductCard({
           {hasSecondImage && (
             <motion.img
               src={secondaryImage}
-              alt={name}
+              alt={displayName}
               className="absolute inset-0 w-full h-full object-cover"
               animate={{
                 opacity: isHovered ? 1 : 0,
@@ -126,9 +144,9 @@ export default function ProductCard({
               <motion.span
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-foreground text-background text-[10px] tracking-[0.12em] px-2.5 py-1 uppercase"
+                className="bg-foreground text-background text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-sm uppercase"
               >
-                Sale
+                {t("product.sale")}
               </motion.span>
             )}
             {isNewArrival && (
@@ -136,9 +154,9 @@ export default function ProductCard({
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 }}
-                className="bg-accent text-accent-foreground text-[10px] tracking-[0.12em] px-2.5 py-1 uppercase"
+                className="bg-accent/90 text-accent-foreground text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase shadow-lg"
               >
-                New
+                {t("product.new")}
               </motion.span>
             )}
           </div>
@@ -146,11 +164,11 @@ export default function ProductCard({
           {/* Wishlist button */}
           <motion.button
             onClick={handleWishlist}
-            className="absolute top-3 right-3 z-10 p-2 bg-background/90 backdrop-blur-sm"
-            animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.85 }}
+            className="bg-background/95 absolute top-3 right-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60"
+            animate={{ opacity: revealActions ? 1 : 0, scale: revealActions ? 1 : 0.85 }}
             transition={{ duration: 0.25, ease: luxury }}
             whileTap={{ scale: 0.9 }}
-            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            aria-label={inWishlist ? t("product.removeFromWishlist") : t("product.addToWishlist")}
           >
             <motion.div
               animate={inWishlist ? { scale: [1, 1.35, 1] } : {}}
@@ -165,27 +183,27 @@ export default function ProductCard({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickView({ id, slug, name, basePrice, compareAtPrice, images, variants, isFeatured, isNewArrival });
+              openQuickView({ id, slug, name: displayName, basePrice, compareAtPrice, images, variants, isFeatured, isNewArrival });
             }}
-            className="absolute top-3 right-12 z-10 p-2 bg-background/90 backdrop-blur-sm"
-            animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.85 }}
+            className="bg-background/95 absolute top-3 right-[3.6rem] z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/60"
+            animate={{ opacity: revealActions ? 1 : 0, scale: revealActions ? 1 : 0.85 }}
             transition={{ duration: 0.25, ease: luxury, delay: 0.04 }}
             whileTap={{ scale: 0.9 }}
-            aria-label="Quick view"
-            title="Quick View"
+            aria-label={t("product.quickView")}
+            title={t("product.quickView")}
           >
             <Eye className="w-4 h-4 text-foreground" />
           </motion.button>
 
           {/* Quick add panel */}
           <AnimatePresence>
-            {isHovered && inStockVariants.length > 0 && (
+            {revealActions && inStockVariants.length > 0 && (
               <motion.div
                 initial={{ y: "100%", opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ duration: 0.3, ease: luxury }}
-                className="absolute bottom-0 left-0 right-0 bg-background/96 backdrop-blur-sm p-3 z-10"
+                className="bg-background/95 absolute bottom-0 left-0 right-0 rounded-b-[12px] border-t border-border p-3 z-10"
               >
                 <AnimatePresence mode="wait">
                   {!showSizes ? (
@@ -196,10 +214,10 @@ export default function ProductCard({
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.15 }}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSizes(true); }}
-                      className="w-full flex items-center justify-center gap-2 text-[11px] tracking-[0.18em] uppercase py-2.5 border border-foreground hover:bg-foreground hover:text-background transition-colors duration-200"
+                      className="w-full min-h-11 flex items-center justify-center gap-2 text-[10px] tracking-[0.16em] uppercase py-2.5 border border-foreground hover:bg-foreground hover:text-background transition-colors duration-200"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
-                      Quick Add
+                      {t("product.quickAdd")}
                     </motion.button>
                   ) : (
                     <motion.div
@@ -217,7 +235,7 @@ export default function ProductCard({
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: i * 0.04, ease: luxury }}
                           onClick={(e) => handleQuickAdd(e, v)}
-                          className={`text-[10px] border px-2.5 py-1.5 tracking-wide transition-all duration-200 ${
+                          className={`min-h-10 min-w-10 text-[10px] border px-2.5 py-1.5 tracking-wide transition-all duration-200 ${
                             addedVariantId === v.id
                               ? "bg-accent border-accent text-accent-foreground"
                               : "border-foreground/40 hover:bg-foreground hover:text-background hover:border-foreground"
@@ -237,7 +255,7 @@ export default function ProductCard({
         {/* Color dots */}
         {uniqueColors.length > 1 && (
           <motion.div
-            className="flex gap-1.5 mt-2.5"
+            className="flex gap-2 mt-2.5"
             animate={{ opacity: isHovered ? 1 : 0.4 }}
             transition={{ duration: 0.3 }}
           >
@@ -245,7 +263,7 @@ export default function ProductCard({
               <div
                 key={v.color}
                 title={v.color}
-                className="w-2.5 h-2.5 rounded-full border border-border/50"
+                className="w-3 h-3 rounded-full border border-border/50"
                 style={{ backgroundColor: v.colorHex }}
               />
             ))}
@@ -256,17 +274,19 @@ export default function ProductCard({
         )}
 
         {/* Product info */}
-        <div className="mt-2.5 space-y-1">
-          <h3 className="text-sm font-medium tracking-wide text-foreground leading-snug">
+        <div className="mt-3 space-y-1 px-1">
+          <Link href={`/products/${slug}`} className="block" aria-label={displayName}>
+            <h3 className="text-sm font-medium tracking-wide text-foreground leading-snug">
             <span className="relative inline-block">
-              {name}
+              {displayName}
               <motion.span
                 className="absolute -bottom-0.5 left-0 h-px bg-foreground"
                 animate={{ width: isHovered ? "100%" : "0%" }}
                 transition={{ duration: 0.35, ease: luxury }}
               />
             </span>
-          </h3>
+            </h3>
+          </Link>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">{formatPrice(basePrice)}</span>
@@ -277,7 +297,7 @@ export default function ProductCard({
 
             {/* Compare toggle */}
             <AnimatePresence>
-              {isHovered && (
+              {revealActions && (
                 <motion.button
                   initial={{ opacity: 0, x: 8 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -290,7 +310,8 @@ export default function ProductCard({
                     else if (!compareIsFull) addToCompare({ id, slug, name, basePrice, compareAtPrice, images, variants, isFeatured, isNewArrival });
                   }}
                   disabled={compareIsFull}
-                  title={compareIsFull ? "Max 3 items" : inCompare ? "Remove from compare" : "Add to compare"}
+                  title={compareIsFull ? t("product.compareMax") : inCompare ? t("product.removeCompare") : t("product.compare")}
+                  aria-label={compareIsFull ? t("product.compareMax") : inCompare ? t("product.removeCompare") : t("product.compare")}
                   className={`flex items-center gap-1 text-[10px] tracking-wide transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                     inCompare
                       ? "text-accent"
@@ -298,13 +319,13 @@ export default function ProductCard({
                   }`}
                 >
                   <ArrowLeftRight className="w-3 h-3" />
-                  {inCompare ? "Added" : "Compare"}
+                  {inCompare ? t("product.compareAdded") : t("product.compare")}
                 </motion.button>
               )}
             </AnimatePresence>
           </div>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }

@@ -94,7 +94,7 @@ router.get("/storage/objects/*objectPath", async (req: Request, res: Response) =
     }
   } catch (_err) {
     // Object storage not available (e.g. outside Replit) — redirect to placeholder
-    res.redirect(302, "https://picsum.photos/seed/placeholder/800/600");
+    res.redirect(302, "/images/fashion/hero-luxury-mobile.jpg");
   }
 });
 

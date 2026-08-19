@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/ProductCard";
 import { useRecentlyViewedStore } from "@/store/recentlyViewedStore";
 import { luxury, staggerContainer } from "@/lib/animations";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   excludeId?: string;
@@ -9,12 +10,13 @@ interface Props {
 
 export default function RecentlyViewed({ excludeId }: Props) {
   const { items } = useRecentlyViewedStore();
+  const { t } = useTranslation();
   const filtered = items.filter((i) => i.id !== excludeId).slice(0, 4);
 
   if (filtered.length === 0) return null;
 
   return (
-    <section className="border-t border-border pt-16 mt-16">
+    <section className="border-t border-border/55 pt-16 mt-16">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -22,9 +24,9 @@ export default function RecentlyViewed({ excludeId }: Props) {
         transition={{ duration: 0.6, ease: luxury }}
         className="text-center mb-10"
       >
-        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Continue Exploring</p>
+        <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">{t("product.continueExploring")}</p>
         <h2 className="font-display text-4xl font-light" style={{ fontFamily: "var(--font-display)" }}>
-          Recently Viewed
+          {t("product.recentlyViewed")}
         </h2>
       </motion.div>
 

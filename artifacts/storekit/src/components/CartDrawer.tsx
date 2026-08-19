@@ -5,9 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react";
 import { formatPrice, getProductImage } from "@/lib/utils";
 import { luxury } from "@/lib/animations";
+import { localizeVariantLabel } from "@/lib/catalogI18n";
+import { useTranslation } from "react-i18next";
 
 export default function CartDrawer() {
-  const { isOpen, closeCart, items, removeItem, updateQuantity, itemCount } = useCartStore();
+  const { isOpen, closeCart, items, removeItem, updateQuantity } = useCartStore();
+  const { t, i18n } = useTranslation();
+  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const FREE_SHIPPING_THRESHOLD = 10000;
   const toFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
@@ -15,12 +19,12 @@ export default function CartDrawer() {
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => { if (!open) closeCart(); }}>
-      <SheetContent side="right" className="w-full max-w-[420px] p-0 flex flex-col border-l border-border">
+      <SheetContent side="right" className="mobile-cart-sheet glass-surface w-full max-w-[440px] p-0 flex flex-col border-l border-border/60">
         {/* Header */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/60">
+        <SheetHeader className="px-6 pt-7 pb-5 border-b border-border/55">
           <div className="flex items-center justify-between">
             <SheetTitle className="font-display text-xl font-light tracking-wide" style={{ fontFamily: "var(--font-display)" }}>
-              Your Bag
+              {t("cart.yourBag")}
               <AnimatePresence mode="wait">
                 <motion.span
                   key={itemCount}
@@ -37,19 +41,19 @@ export default function CartDrawer() {
         </SheetHeader>
 
         {/* Free shipping bar */}
-        <div className="px-6 py-3.5 bg-muted/40 border-b border-border/40">
+        <div className="px-6 py-4 bg-gradient-to-r from-accent/10 via-transparent to-accent/10 border-b border-border/40">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-[11px] tracking-[0.12em] text-muted-foreground mb-2 uppercase"
           >
             {toFreeShipping > 0
-              ? <span>Add <span className="text-foreground font-medium">{formatPrice(toFreeShipping)}</span> for free shipping</span>
-              : <span className="text-accent font-medium">You've unlocked free shipping!</span>}
+              ? <span>{t("cart.addForFreeShipping", { amount: formatPrice(toFreeShipping) })}</span>
+              : <span className="text-accent font-medium">{t("cart.unlockedFreeShipping")}</span>}
           </motion.div>
-          <div className="h-px bg-border/60 rounded-full overflow-hidden">
+          <div className="h-1 bg-border/50 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-foreground"
+              className="h-full bg-gradient-to-r from-accent to-[hsl(346_42%_34%)] rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.6, ease: luxury }}
@@ -75,10 +79,10 @@ export default function CartDrawer() {
                   <ShoppingBag className="w-12 h-12" />
                 </motion.div>
                 <p className="font-display text-xl font-light text-muted-foreground mb-2" style={{ fontFamily: "var(--font-display)" }}>
-                  Your bag is empty
+                  {t("cart.empty")}
                 </p>
                 <p className="text-xs text-muted-foreground tracking-wide">
-                  Add something beautiful to get started.
+                  {t("cart.emptyDesc")}
                 </p>
               </motion.div>
             ) : (
@@ -94,7 +98,7 @@ export default function CartDrawer() {
                 >
                   {/* Image */}
                   <Link href={`/products/${item.productId}`} onClick={closeCart}>
-                    <div className="w-[88px] h-[110px] bg-muted flex-shrink-0 overflow-hidden">
+                    <div className="w-[88px] h-[110px] bg-muted flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-border/50">
                       <motion.img
                         src={getProductImage(item.imageUrl, item.productId)}
                         alt={item.productName}
@@ -110,11 +114,14 @@ export default function CartDrawer() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h4 className="text-sm font-medium leading-snug">{item.productName}</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5 tracking-wide">{item.variantLabel}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 tracking-wide">{localizeVariantLabel(item.variantLabel, i18n.language)}</p>
                       </div>
-                      <motion.button
+                                                                    <motion.button
+                        aria-label={t("cart.remove")}
+
                         onClick={() => removeItem(item.variantId)}
-                        className="text-muted-foreground/50 hover:text-foreground transition-colors flex-shrink-0 mt-0.5"
+
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground/50 hover:text-foreground transition-colors flex-shrink-0 -mr-2 -mt-2"
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -127,7 +134,8 @@ export default function CartDrawer() {
                       <div className="flex items-center border border-border/60">
                         <motion.button
                           onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                          className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label={t("cart.decreaseQuantity")}
+                          className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                           whileTap={{ scale: 0.88 }}
                         >
                           <Minus className="w-3 h-3" />
@@ -146,6 +154,7 @@ export default function CartDrawer() {
                         </AnimatePresence>
                         <motion.button
                           onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                          aria-label={t("cart.increaseQuantity")}
                           className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30"
                           disabled={item.quantity >= item.maxQuantity}
                           whileTap={{ scale: 0.88 }}
@@ -183,11 +192,11 @@ export default function CartDrawer() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.3, ease: luxury }}
-              className="px-6 py-6 border-t border-border/60 space-y-4"
+              className="glass-card mobile-sheet-bottom px-5 sm:px-6 py-5 sm:py-6 border-t border-border/60 space-y-4"
             >
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={subtotal}
@@ -199,28 +208,28 @@ export default function CartDrawer() {
                     </motion.span>
                   </AnimatePresence>
                 </div>
-                <p className="text-[11px] text-muted-foreground tracking-wide">Shipping and taxes calculated at checkout</p>
+                <p className="text-[11px] text-muted-foreground tracking-wide">{t("cart.shippingTaxes")}</p>
               </div>
 
               <div className="flex gap-2.5">
                 <Link
                   href="/cart"
                   onClick={closeCart}
-                  className="flex-1 text-center py-3.5 border border-border text-[11px] tracking-[0.14em] uppercase hover:bg-muted transition-colors duration-200"
+                  className="flex-1 text-center py-3.5 rounded-full border border-border text-[11px] tracking-[0.14em] uppercase hover:border-accent hover:text-accent transition-colors duration-200"
                 >
-                  View Bag
+                  {t("cart.viewBag")}
                 </Link>
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-foreground text-background text-[11px] tracking-[0.14em] uppercase hover:bg-foreground/85 transition-colors duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-foreground text-background text-[11px] tracking-[0.14em] uppercase hover:bg-accent hover:text-accent-foreground transition-colors duration-200 luxury-glow"
                 >
-                  Checkout
+                  {t("cart.checkout")}
                   <motion.div
                     animate={{ x: [0, 3, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className={`w-3.5 h-3.5 ${i18n.language === "ar" ? "rotate-180" : ""}`} />
                   </motion.div>
                 </Link>
               </div>

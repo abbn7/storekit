@@ -5,10 +5,12 @@ import Layout from "@/components/Layout";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice, getProductImage } from "@/lib/utils";
 import { Minus, Plus, X, ArrowRight, Tag, Loader2, Check, AlertCircle, Gift, Truck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const FREE_SHIPPING_THRESHOLD = 10000; // $100
 
 export default function CartPage() {
+  const { t } = useTranslation();
   const { items, removeItem, updateQuantity } = useCartStore();
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 999;
@@ -40,14 +42,14 @@ export default function CartPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setPromoError(data.error ?? "Invalid promo code");
+        setPromoError(data.error ?? t("cart.invalidPromo"));
         setAppliedPromo(null);
       } else {
         setAppliedPromo(data);
         setPromoCode("");
       }
     } catch {
-      setPromoError("Could not validate code. Please try again.");
+      setPromoError(t("cart.promoError"));
     } finally {
       setPromoLoading(false);
     }
@@ -64,16 +66,16 @@ export default function CartPage() {
           className="font-display text-4xl lg:text-5xl font-light mb-8"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Your Bag
+          {t("cart.yourBag")}
         </motion.h1>
 
         {items.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
             <p className="font-display text-3xl font-light text-muted-foreground mb-6" style={{ fontFamily: "var(--font-display)" }}>
-              Your bag is empty
+              {t("cart.empty")}
             </p>
             <Link href="/collections" className="inline-block bg-foreground text-background px-8 py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors">
-              Continue Shopping
+              {t("cart.continueShopping")}
             </Link>
           </motion.div>
         ) : (
@@ -96,11 +98,11 @@ export default function CartPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="text-green-600 font-medium"
                       >
-                        🎉 You've unlocked free shipping!
+                        🎉 {t("cart.unlockedFreeShipping")}
                       </motion.span>
                     ) : (
                       <span className="text-muted-foreground">
-                        Add <span className="font-medium text-foreground">{formatPrice(toFreeShipping)}</span> more for free shipping
+                        {t("cart.addForFreeShipping", { amount: formatPrice(toFreeShipping) })}
                       </span>
                     )}
                   </div>
@@ -138,11 +140,11 @@ export default function CartPage() {
                           <p className="text-sm text-muted-foreground mt-1">{item.variantLabel}</p>
                           {item.compareAtPrice && item.compareAtPrice > item.price && (
                             <p className="text-xs text-accent mt-1">
-                              Save {formatPrice(item.compareAtPrice - item.price)}
+                              {t("cart.save")} {formatPrice(item.compareAtPrice - item.price)}
                             </p>
                           )}
                         </div>
-                        <button onClick={() => removeItem(item.variantId)} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-1">
+                        <button aria-label={t("cart.remove")} onClick={() => removeItem(item.variantId)} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-1">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -171,7 +173,7 @@ export default function CartPage() {
                 >
                   <Gift className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm text-muted-foreground flex-1">
-                    {giftNote ? "Gift note added ✓" : "Add a gift note (free)"}
+                    {giftNote ? t("cart.giftNoteAdded") : t("cart.addGiftNote")}
                   </span>
                   <motion.span
                     animate={{ rotate: showGiftNote ? 180 : 0 }}
@@ -190,7 +192,7 @@ export default function CartPage() {
                         <textarea
                           value={giftNote}
                           onChange={e => setGiftNote(e.target.value)}
-                          placeholder="Write your personal message here…"
+                          placeholder={t("cart.personalMessage")}
                           maxLength={280}
                           rows={3}
                           className="w-full text-sm px-3 py-2.5 border border-border bg-background resize-none focus:outline-none focus:border-foreground/40 transition-colors placeholder:text-muted-foreground"
@@ -205,7 +207,7 @@ export default function CartPage() {
 
             {/* Summary */}
             <div className="lg:sticky lg:top-28 h-fit bg-card border border-border p-8">
-              <h2 className="font-medium text-sm tracking-[0.1em] uppercase mb-6">Order Summary</h2>
+              <h2 className="font-medium text-sm tracking-[0.1em] uppercase mb-6">{t("cart.orderSummary")}</h2>
 
               {/* Promo Code */}
               <div className="mb-6">
@@ -224,8 +226,8 @@ export default function CartPage() {
                           <p className="text-xs font-mono font-medium text-green-700 dark:text-green-400 tracking-widest">{appliedPromo.code}</p>
                           <p className="text-[10px] text-green-600 dark:text-green-500 mt-0.5">
                             {appliedPromo.discountType === "percent"
-                              ? `${appliedPromo.discountValue}% off applied`
-                              : `${formatPrice(appliedPromo.discountAmount)} off applied`}
+                              ? `${appliedPromo.discountValue}% ${t("cart.offApplied")}`
+                              : `${formatPrice(appliedPromo.discountAmount)} ${t("cart.offApplied")}`}
                           </p>
                         </div>
                       </div>
@@ -243,7 +245,7 @@ export default function CartPage() {
                             value={promoCode}
                             onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); }}
                             onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
-                            placeholder="Promo code"
+                            placeholder={t("cart.promoCode")}
                             className="w-full pl-8 pr-3 py-2.5 border border-border bg-background text-xs tracking-widest font-mono uppercase focus:outline-none focus:border-foreground/50 transition-colors placeholder:normal-case placeholder:font-sans placeholder:tracking-normal"
                           />
                         </div>
@@ -252,7 +254,7 @@ export default function CartPage() {
                           disabled={!promoCode.trim() || promoLoading}
                           className="px-4 py-2.5 border border-foreground bg-foreground text-background text-xs tracking-[0.12em] uppercase hover:bg-foreground/85 transition-colors disabled:opacity-40 flex items-center gap-1.5"
                         >
-                          {promoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                          {promoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : t("cart.apply")}
                         </button>
                       </div>
                       <AnimatePresence>
@@ -275,22 +277,22 @@ export default function CartPage() {
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Shipping</span>
+                  <span className="text-muted-foreground">{t("cart.shipping")}</span>
                   <motion.span
                     key={shippingCost}
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={shippingCost === 0 ? "text-green-600 font-medium" : ""}
                   >
-                    {shippingCost === 0 ? "Free 🎉" : formatPrice(shippingCost)}
+                    {shippingCost === 0 ? `${t("cart.free")} 🎉` : formatPrice(shippingCost)}
                   </motion.span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax (est. 8%)</span>
+                  <span className="text-muted-foreground">{t("cart.tax")}</span>
                   <span>{formatPrice(tax)}</span>
                 </div>
                 {appliedPromo && (
@@ -299,18 +301,18 @@ export default function CartPage() {
                     animate={{ opacity: 1, height: "auto" }}
                     className="flex justify-between text-sm text-green-600"
                   >
-                    <span>Discount ({appliedPromo.code})</span>
+                    <span>{t("cart.discount")} ({appliedPromo.code})</span>
                     <span>−{formatPrice(discount)}</span>
                   </motion.div>
                 )}
                 {giftNote && (
                   <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Gift note</span>
-                    <span>Free</span>
+                    <span>{t("cart.giftNote")}</span>
+                    <span>{t("cart.free")}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium pt-4 border-t border-border text-base">
-                  <span>Total</span>
+                  <span>{t("cart.total")}</span>
                   <motion.span key={total} initial={{ scale: 1.05, opacity: 0.7 }} animate={{ scale: 1, opacity: 1 }}>
                     {formatPrice(total)}
                   </motion.span>
@@ -321,18 +323,18 @@ export default function CartPage() {
                 href="/checkout"
                 className="flex items-center justify-center gap-2 w-full bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors"
               >
-                Checkout <ArrowRight className="w-4 h-4" />
+                {t("cart.checkout")} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/collections" className="block text-center text-xs text-muted-foreground hover:text-foreground transition-colors mt-4 tracking-wide">
-                Continue Shopping
+                {t("cart.continueShopping")}
               </Link>
 
               {/* Trust badges */}
               <div className="mt-6 pt-6 border-t border-border space-y-2">
                 {[
-                  "🔒 Secure SSL checkout",
-                  "↩ Free returns within 30 days",
-                  "📦 Ships in 2–3 business days",
+                  `🔒 ${t("cart.secureCheckout")}`,
+                  `↩ ${t("cart.returnsBadge")}`,
+                  `📦 ${t("cart.shipsBadge")}`,
                 ].map(badge => (
                   <p key={badge} className="text-[10px] text-muted-foreground tracking-wide">{badge}</p>
                 ))}

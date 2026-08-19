@@ -2,8 +2,10 @@ import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
 import { useGetStoreConfig } from "@workspace/api-client-react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   const { data: config } = useGetStoreConfig();
 
   return (
@@ -11,7 +13,7 @@ export default function AboutPage() {
       {/* Hero */}
       <div className="relative h-[60vh] overflow-hidden bg-muted">
         <img
-          src="https://picsum.photos/seed/about-hero/1400/900"
+          src="/images/fashion/high-fashion.jpg"
           alt="About"
           className="w-full h-full object-cover"
         />
@@ -24,7 +26,7 @@ export default function AboutPage() {
             className="font-display text-5xl lg:text-7xl font-light text-background text-center"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Our Story
+            {t("about.ourStory")}
           </motion.h1>
         </div>
       </div>
@@ -38,7 +40,7 @@ export default function AboutPage() {
           transition={{ duration: 0.7 }}
           className="mb-20"
         >
-          <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">About Us</p>
+          <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">{t("about.aboutUs")}</p>
           <p className="font-display text-2xl lg:text-3xl font-light leading-relaxed text-foreground/80" style={{ fontFamily: "var(--font-display)" }}>
             {config?.aboutText ?? "StoreKit was born from a simple belief: that beautiful things should be made well. We partner with artisan workshops across Portugal, Italy, and Japan to create garments that feel extraordinary — and last."}
           </p>
@@ -72,13 +74,13 @@ export default function AboutPage() {
           transition={{ duration: 0.8 }}
           className="grid grid-cols-2 gap-4 mb-16"
         >
-          <img src="https://picsum.photos/seed/about-1/600/750" alt="" className="w-full aspect-[4/5] object-cover" />
-          <img src="https://picsum.photos/seed/about-2/600/750" alt="" className="w-full aspect-[4/5] object-cover mt-12" />
+          <img src="/images/fashion/lookbook-grey.jpg" alt="" className="w-full aspect-[4/5] object-cover" />
+          <img src="/images/fashion/minimal-outfit.jpg" alt="" className="w-full aspect-[4/5] object-cover mt-12" />
         </motion.div>
 
         <div className="text-center">
           <Link href="/collections" className="inline-block bg-foreground text-background px-10 py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors">
-            Explore the Collection
+            {t("home.exploreCollection")}
           </Link>
         </div>
       </div>

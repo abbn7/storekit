@@ -16,7 +16,7 @@ export default function Layout({ children, noFooter }: LayoutProps) {
     <div className="min-h-screen flex flex-col">
       {!isAdmin && <AnnouncementBar />}
       {!isAdmin && <Navbar />}
-      <main className={`flex-1 ${!isAdmin ? "pt-[calc(40px+80px)]" : ""}`}>
+      <main className={`flex-1 ${!isAdmin ? "site-main-offset" : ""}`}>
         {children}
       </main>
       {!isAdmin && !noFooter && <Footer />}

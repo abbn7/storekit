@@ -7,6 +7,8 @@ import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { formatPrice, getProductImage } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { localizeCatalogText, localizeVariantLabel, localizeVariantValue } from "@/lib/catalogI18n";
 import { luxury } from "@/lib/animations";
 import SizeGuide from "@/components/SizeGuide";
 
@@ -15,6 +17,7 @@ export default function QuickViewModal() {
   const { addItem, openCart } = useCartStore();
   const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -52,6 +55,7 @@ export default function QuickViewModal() {
     : product ? [{ url: getProductImage(null, product.id), alt: product.name }] : [];
 
   const inWishlist = product ? isInWishlist(product.id) : false;
+  const localizedProduct = product ? localizeCatalogText(product, i18n.language) : null;
 
   const colors = product ? [...new Map(product.variants.map(v => [v.color, v])).values()] : [];
   const sizesForColor = product
@@ -67,12 +71,12 @@ export default function QuickViewModal() {
   const hasDiscount = compareAt && compareAt > price;
   const isInStock = selectedVariant ? selectedVariant.stock > 0 : true;
 
-  const ctaLabel = added ? "Added to Bag ✓"
-    : !selectedColor && !selectedSize ? "Select Options"
-    : !selectedColor ? "Select Color"
-    : !selectedSize ? "Select Size"
-    : !isInStock ? "Out of Stock"
-    : "Add to Bag";
+  const ctaLabel = added ? t("product.addedToBag")
+    : !selectedColor && !selectedSize ? t("product.selectOptions")
+    : !selectedColor ? t("product.selectColor")
+    : !selectedSize ? t("product.selectSize")
+    : !isInStock ? t("product.outOfStock")
+    : t("product.addToBag");
 
   function handleAddToCart() {
     if (!selectedVariant || !product) return;
@@ -80,14 +84,14 @@ export default function QuickViewModal() {
       productId: product.id,
       variantId: selectedVariant.id,
       productName: product.name,
-      variantLabel: `${selectedVariant.size} / ${selectedVariant.color}`,
+      variantLabel: localizeVariantLabel(`${selectedVariant.size} / ${selectedVariant.color}`, i18n.language),
       imageUrl: images[0]?.url ?? "",
       price: selectedVariant.price,
       quantity: 1,
       maxQuantity: selectedVariant.stock,
     });
     setAdded(true);
-    toast({ title: "Added to bag ✓", description: `${product.name} · ${selectedVariant.size} / ${selectedVariant.color}` });
+    toast({ title: t("product.addedToBag"), description: `${localizedProduct?.name ?? product.name} · ${localizeVariantLabel(`${selectedVariant.size} / ${selectedVariant.color}`, i18n.language)}` });
     setTimeout(() => {
       close();
       openCart();
@@ -116,13 +120,13 @@ export default function QuickViewModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 48, scale: 0.97 }}
             transition={{ duration: 0.45, ease: luxury }}
-            className="fixed inset-x-3 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[800px] sm:max-h-[90vh] z-[81] bg-background shadow-2xl flex flex-col sm:flex-row overflow-hidden max-h-[92vh]"
+            className="mobile-quickview glass-card fixed inset-x-2 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[800px] sm:max-h-[90vh] z-[81] rounded-t-[1.5rem] sm:rounded-[1.5rem] shadow-2xl flex flex-col sm:flex-row overflow-hidden max-h-[92svh]"
           >
             {/* Close */}
             <button
               onClick={close}
-              className="absolute top-4 right-4 z-10 p-2 bg-background/80 backdrop-blur-sm hover:bg-muted transition-colors"
-              aria-label="Close"
+              className="icon-glass absolute top-4 right-4 z-10"
+              aria-label={t("product.close")}
             >
               <X className="w-4 h-4" />
             </button>
@@ -146,8 +150,8 @@ export default function QuickViewModal() {
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                  {hasDiscount && <span className="bg-foreground text-background text-[10px] tracking-[0.12em] px-2 py-0.5 uppercase">Sale</span>}
-                  {product.isNewArrival && <span className="bg-accent text-accent-foreground text-[10px] tracking-[0.12em] px-2 py-0.5 uppercase">New</span>}
+                  {hasDiscount && <span className="glass-dark text-background text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase">{t("product.sale")}</span>}
+                  {product.isNewArrival && <span className="bg-accent text-accent-foreground text-[10px] tracking-[0.12em] px-2.5 py-1 rounded-full uppercase shadow-lg">{t("product.new")}</span>}
                 </div>
               </div>
 
@@ -174,10 +178,10 @@ export default function QuickViewModal() {
               {/* Tag + Title */}
               <div>
                 <p className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-2">
-                  {product.isNewArrival ? "New Arrival" : "Collection"}
+                  {product.isNewArrival ? t("home.newArrivalsTitle") : t("collections.collection")}
                 </p>
                 <h2 className="font-display text-2xl sm:text-3xl font-light leading-tight mb-3" style={{ fontFamily: "var(--font-display)" }}>
-                  {product.name}
+                  {localizedProduct?.name ?? product.name}
                 </h2>
 
                 {/* Price */}
@@ -186,7 +190,7 @@ export default function QuickViewModal() {
                   {hasDiscount && (
                     <>
                       <span className="text-base text-muted-foreground line-through">{formatPrice(compareAt!)}</span>
-                      <span className="text-sm text-accent font-medium">{Math.round((1 - price / compareAt!) * 100)}% off</span>
+                      <span className="text-sm text-accent font-medium">{Math.round((1 - price / compareAt!) * 100)}% {t("product.off")}</span>
                     </>
                   )}
                 </div>
@@ -196,17 +200,18 @@ export default function QuickViewModal() {
               {colors.length > 0 && (
                 <div>
                   <p className="text-[11px] tracking-[0.15em] uppercase mb-2.5 font-medium">
-                    Color: <span className="font-normal text-muted-foreground">{selectedColor ?? "Select"}</span>
+                    {t("product.color")}: <span className="font-normal text-muted-foreground">{selectedColor ? localizeVariantValue(selectedColor, i18n.language) : t("product.select")}</span>
                   </p>
                   <div className="flex gap-2.5 flex-wrap">
                     {colors.map((v) => (
                       <motion.button
                         key={v.color}
                         onClick={() => { setSelectedColor(v.color); setSelectedSize(null); }}
-                        title={v.color}
+                        title={localizeVariantValue(v.color, i18n.language)}
+                        aria-label={localizeVariantValue(v.color, i18n.language)}
                         whileHover={{ scale: 1.12 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`w-7 h-7 rounded-full border-2 transition-all duration-300 ${selectedColor === v.color ? "border-foreground shadow-md scale-110" : "border-border hover:border-foreground/50"}`}
+                        className={`w-11 h-11 rounded-full border-2 transition-all duration-300 ${selectedColor === v.color ? "border-foreground shadow-md scale-110" : "border-border hover:border-foreground/50"}`}
                         style={{ backgroundColor: v.colorHex ?? "#000" }}
                       />
                     ))}
@@ -219,9 +224,9 @@ export default function QuickViewModal() {
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <p className="text-[11px] tracking-[0.15em] uppercase font-medium">
-                      Size: <span className="font-normal text-muted-foreground">{selectedSize ?? "Select"}</span>
+                      {t("product.size")}: <span className="font-normal text-muted-foreground">{selectedSize ? localizeVariantValue(selectedSize, i18n.language) : t("product.select")}</span>
                     </p>
-                    <SizeGuide />
+                    <SizeGuide label={t("product.sizeGuide")} />
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     {uniqueSizes.map((size) => {
@@ -242,7 +247,7 @@ export default function QuickViewModal() {
                                 : "border-border hover:border-foreground"
                           }`}
                         >
-                          {size}
+                          {localizeVariantValue(size, i18n.language)}
                         </motion.button>
                       );
                     })}
@@ -257,7 +262,8 @@ export default function QuickViewModal() {
                   disabled={!selectedVariant || !isInStock || added}
                   whileHover={selectedVariant && isInStock && !added ? { scale: 1.01 } : {}}
                   whileTap={selectedVariant && isInStock && !added ? { scale: 0.98 } : {}}
-                  className={`flex-1 h-12 text-[11px] tracking-[0.2em] uppercase transition-all duration-300 ${
+                                      className={`flex-1 h-12 rounded-full text-[11px] tracking-[0.2em] uppercase transition-all duration-300 luxury-glow ${
+
                     added
                       ? "bg-green-600 text-white"
                       : "bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -269,7 +275,7 @@ export default function QuickViewModal() {
                 {/* Wishlist */}
                 <motion.button
                   onClick={() => inWishlist ? removeFromWishlist(product.id) : addToWishlist(product.id)}
-                  className="w-12 h-12 border border-border hover:bg-muted transition-colors flex items-center justify-center flex-shrink-0"
+                  className="icon-glass !w-12 !h-12 flex-shrink-0"
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.92 }}
                 >
@@ -285,8 +291,8 @@ export default function QuickViewModal() {
                 onClick={close}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group/link w-fit"
               >
-                <span className="tracking-wide underline-offset-2 hover:underline">View full details</span>
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5" />
+                <span className="tracking-wide underline-offset-2 hover:underline">{t("product.viewDetails")}</span>
+                <ArrowRight className={`w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5 ${i18n.language === "ar" ? "rotate-180" : ""}`} />
               </Link>
             </div>
           </motion.div>
