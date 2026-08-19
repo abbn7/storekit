@@ -4,7 +4,7 @@ StoreKit مجهز الآن ليُبنى من `Dockerfile` ويشغّل **الو�
 
 > **مهم لإصلاح Railway build:** صورة البناء والإنتاج تستخدم `node:22-bookworm-slim` بدل Alpine/musl. هذا يضمن توفر Rollup glibc native binary، بينما يتم نسخ `tsconfig.json` و`tsconfig.base.json` مع بنية الـworkspace كاملة. لا تضف Build Command مخصصًا في Railway؛ اترك Builder على `Dockerfile` كما يحدد `railway.json`.
 
-> **المطلوب فعليًا للنشر الأول:** خدمة StoreKit واحدة فقط. عند غياب `DATABASE_URL`، يبدأ `scripts/start-production.sh` PostgreSQL 16 داخل نفس حاوية التطبيق، ثم يشغّل migrations وseed ويخدم الواجهة والـAPI. لذلك لا توجد خطوة مطلوبة لإنشاء PostgreSQL أو ربط Reference Variable.
+> **المطلوب فعليًا للنشر الأول:** خدمة StoreKit واحدة فقط. عند غياب `DATABASE_URL`، يبدأ `scripts/start-production.sh` PostgreSQL داخل نفس حاوية التطبيق، ثم يشغّل migrations وseed ويخدم الواجهة والـAPI. لذلك لا توجد خطوة مطلوبة لإنشاء PostgreSQL أو ربط Reference Variable.
 >
 > **مهم جدًا عند وجود خدمات باسم `@workspace/*`:** هذه ليست طريقة نشر StoreKit الصحيحة. إذا ظهرت خدمات `@workspace/mockup-sandbox` أو `@workspace/api-server` أو `@workspace/api-client-react` أو `@workspace/storekit` منفصلة، فالمشروع مضبوط كـmonorepo services أو Nixpacks قديم. احذف الخدمات الفاشلة القديمة، وأنشئ خدمة واحدة من **جذر المستودع** `storekit` فقط. لا تضبط Root Directory على `artifacts/storekit` أو `artifacts/api-server`، ولا تنشئ خدمة لكل package.
 
