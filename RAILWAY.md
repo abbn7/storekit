@@ -4,23 +4,17 @@ StoreKit مجهز الآن ليُبنى من `Dockerfile` ويشغّل **الو�
 
 > **مهم لإصلاح Railway build:** صورة البناء والإنتاج تستخدم `node:22-bookworm-slim` بدل Alpine/musl. هذا يضمن توفر Rollup glibc native binary، بينما يتم نسخ `tsconfig.json` و`tsconfig.base.json` مع بنية الـworkspace كاملة. لا تضف Build Command مخصصًا في Railway؛ اترك Builder على `Dockerfile` كما يحدد `railway.json`.
 
-> **المطلوب فعليًا:** خدمة StoreKit واحدة + خدمة PostgreSQL داخل نفس مشروع Railway. قاعدة البيانات ليست خدمة خارجية يديرها العميل؛ Railway ينشئها داخل المشروع ويوفر `DATABASE_URL` للتطبيق.
+> **المطلوب فعليًا للنشر الأول:** خدمة StoreKit واحدة فقط. عند غياب `DATABASE_URL`، يبدأ `scripts/start-production.sh` PostgreSQL 16 داخل نفس حاوية التطبيق، ثم يشغّل migrations وseed ويخدم الواجهة والـAPI. لذلك لا توجد خطوة مطلوبة لإنشاء PostgreSQL أو ربط Reference Variable.
 >
 > **مهم جدًا عند وجود خدمات باسم `@workspace/*`:** هذه ليست طريقة نشر StoreKit الصحيحة. إذا ظهرت خدمات `@workspace/mockup-sandbox` أو `@workspace/api-server` أو `@workspace/api-client-react` أو `@workspace/storekit` منفصلة، فالمشروع مضبوط كـmonorepo services أو Nixpacks قديم. احذف الخدمات الفاشلة القديمة، وأنشئ خدمة واحدة من **جذر المستودع** `storekit` فقط. لا تضبط Root Directory على `artifacts/storekit` أو `artifacts/api-server`، ولا تنشئ خدمة لكل package.
 
-## النشر الأول
+## النشر الأول — ضغطة واحدة
 
-افتح [Railway](https://railway.com)، اختر **New Project → Deploy from GitHub repo**، ثم اختر مستودع `storekit` واضغط **Deploy Now**. داخل خدمة StoreKit تأكد من أن **Root Directory = `/`** وأن Builder هو **Dockerfile** وأن Dockerfile path هو `/Dockerfile`. اترك Build Command وStart Command فارغين؛ `railway.json` وDockerfile يحددان الأمر الصحيح تلقائيًا. لا تستخدم `pnpm -r build` يدويًا، لأن ذلك يشغّل packages غير production مثل mockup.
+افتح [زر Deploy on Railway](https://railway.com/new/github?repo=abdelhamednada631-del/storekit)، اختر المستودع إذا طلب Railway ذلك، ثم اضغط **Deploy**. اترك Root Directory على جذر المستودع، ولا تضف Build Command أو Start Command أو خدمة PostgreSQL يدويًا؛ `railway.json` و`Dockerfile` يضبطان البناء، entrypoint، healthcheck، وrestart policy تلقائيًا. بعد اكتمال البناء سيقوم التطبيق بتهيئة PostgreSQL الداخلي، تشغيل migrations وseed، ثم يصبح المتجر متاحًا من نفس الخدمة.
 
-إذا كانت لديك Project موجودة بالفعل، احتفظ بخدمتين فقط: خدمة StoreKit وخدمة PostgreSQL. أوقف أو احذف كل service باسم `@workspace/*` القديم، ثم اعمل Redeploy من commit حديث بعد الدمج. الملف `nixpacks.toml` موجود كمسار احتياطي، ويشغّل `build:production` فقط إذا كانت الخدمة مضبوطة على Nixpacks، لكنه لا يبرر إنشاء services منفصلة.
+إذا كانت لديك Project موجودة بالفعل، أوقف أو احذف الخدمات القديمة باسم `@workspace/*` أو أي PostgreSQL منفصل لم تعد تحتاجه، ثم اعمل Redeploy من commit حديث بعد الدمج. الملف `nixpacks.toml` موجود كمسار احتياطي ويشغّل `build:production` فقط إذا تم اختيار Nixpacks، لكنه لا يبرر إنشاء services منفصلة.
 
-بعد إنشاء المشروع، من لوحة المشروع اختر **New → Database → PostgreSQL**. في خدمة StoreKit أضف متغيرًا واحدًا باسم `DATABASE_URL` وقيمته Reference Variable إلى خدمة PostgreSQL:
-
-```text
-${{Postgres.DATABASE_URL}}
-```
-
-إذا كان اسم خدمة قاعدة البيانات مختلفًا، اختر `DATABASE_URL` من قائمة Reference Variables بدل كتابة الاسم يدويًا. بعد حفظ المتغير اضغط **Deploy** مرة واحدة. عند أول تشغيل سيقوم التطبيق تلقائيًا بتشغيل migrations ثم seed للمنتجات والمجموعات والإعدادات.
+يمكنك اختيار PostgreSQL خارجي لاحقًا إذا أردت إدارة قاعدة البيانات خارج الحاوية؛ بمجرد ضبط `DATABASE_URL` سيأخذ التطبيق هذه القيمة ويستخدمها بدل PostgreSQL الداخلي.
 
 ## المتغيرات الأساسية
 
@@ -28,12 +22,13 @@ ${{Postgres.DATABASE_URL}}
 
 | المتغير | الحالة | الغرض |
 |---|---|---|
-| `DATABASE_URL` | **ضروري** | Reference إلى PostgreSQL داخل Railway |
+| `DATABASE_URL` | اختياري | إذا غاب، يستخدم التطبيق PostgreSQL الداخلي داخل الحاوية؛ وإذا وُجد، تكون قيمته هي المصدر الأساسي |
 | `ADMIN_PASSWORD` | افتراضي قابل للتغيير | دخول `/admin` |
 | `ADMIN_SECRET` | اختياري | توقيع جلسات الإدارة؛ يفضّل ضبطه في production |
 | `SESSION_SECRET` | اختياري | سر جلسات التطبيق إذا استُخدم |
 | `NODE_ENV` | مضبوط في Dockerfile | `production` |
 | `PORT` | يحدده Railway | التطبيق يستمع على المنفذ الذي توفره Railway |
+| `UPLOAD_DIR` | اختياري | اضبطه إلى `/app/data/uploads` إذا استخدمت Volume واحدًا لحفظ الصور المرفوعة مع قاعدة البيانات |
 
 القيمة الافتراضية للإدارة هي `storekit2024` للتشغيل الأول فقط. غيّرها من **StoreKit Service → Variables** قبل تسليم الرابط للعميل.
 
@@ -41,13 +36,11 @@ ${{Postgres.DATABASE_URL}}
 
 الـfrontend والصور الأساسية داخل صورة التطبيق تحت `artifacts/storekit/public/images`. كما أن بيانات seed تستخدم مسارات محلية مثل `/images/fashion/hero-luxury-mobile.jpg` بدل روابط Picsum الخارجية. لذلك لا يحتاج المتجر إلى CDN صور أو خدمة API خارجية كي يعرض كتالوجه الأساسي.
 
-رفع الصور من لوحة الإدارة يستخدم `/app/uploads`. إذا كان العميل سيضيف صورًا من لوحة الإدارة، أضف Volume إلى خدمة StoreKit بمسار mount هو:
+## استمرارية بيانات الإنتاج
 
-```text
-/app/uploads
-```
+النشر الأول يعمل دون Volume، لكن نظام ملفات Railway للحاوية ليس مخزنًا دائمًا مضمونًا عند إعادة إنشاء الخدمة. لذلك، إذا كان المتجر سيستقبل طلبات حقيقية أو تعديلات من لوحة الإدارة، أضف Volume اختياريًا إلى خدمة StoreKit بمسار mount هو `/app/data`، واضبط المتغير `UPLOAD_DIR=/app/data/uploads`. سيحفظ ذلك PostgreSQL الداخلي في `/app/data/postgres` وملفات الإدارة في `/app/data/uploads` داخل Volume واحد.
 
-بدون Volume سيظل المتجر يعمل، لكن الملفات التي يرفعها العميل قد تختفي عند إعادة إنشاء الخدمة أو نشر إصدار جديد؛ لذلك يُنصح بالـVolume لأي متجر production.
+هذه الخطوة **ليست شرطًا لنجاح النشر بضغطة واحدة**؛ هي توصية تشغيلية لاستمرارية بيانات متجر production. إذا لم تضف Volume ولم تضبط `DATABASE_URL` خارجيًا، سيظل المتجر يعمل، لكن البيانات المحلية قد تبدأ من جديد بعد إعادة إنشاء الحاوية.
 
 ## الدفع وتسجيل العملاء
 
@@ -64,7 +57,7 @@ https://YOUR-RAILWAY-DOMAIN.up.railway.app/healthz
 https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/health
 ```
 
-يجب أن يعيد `/healthz` النص `ok`، وأن يعيد `/api/health` JSON يحتوي على `"ok": true`. إذا ظهر في سجل build القديم `@rollup/rollup-linux-x64-musl`، فهذا يعني أن Railway يبني commit قديمًا أو يستخدم إعداد Alpine قديمًا؛ تأكد من أن آخر commit هو إصلاح Dockerfile، ثم نفّذ Redeploy من آخر commit مع تنظيف build cache إن ظهر الخيار. أكثر أسباب الفشل شيوعًا بعد ذلك هي عدم ربط `DATABASE_URL` أو نسيان الضغط على Deploy بعد إضافة Reference Variable.
+يجب أن يعيد `/healthz` النص `ok`، وأن يعيد `/api/health` JSON يحتوي على `"ok": true`. إذا ظهر في السجل أن `DATABASE_URL` غير موجود، فهذا طبيعي في النشر one-click؛ يجب أن ترى بدلًا منه رسائل تشغيل PostgreSQL الداخلي ثم `Migrations complete` و`Seed complete`. إذا ظهر في سجل build القديم `@rollup/rollup-linux-x64-musl`، فهذا يعني أن Railway يبني commit قديمًا أو يستخدم إعداد Alpine قديمًا؛ تأكد من أن آخر commit هو إصلاح Dockerfile، ثم نفّذ Redeploy من آخر commit مع تنظيف build cache إن ظهر الخيار.
 
 ## التحديثات اللاحقة
 
@@ -76,7 +69,7 @@ git commit -m "update storefront"
 git push origin main
 ```
 
-Railway سيعيد البناء والنشر تلقائيًا من آخر commit على `main`، وسيعيد تشغيل migrations بشكل idempotent ثم يتخطى seed إذا كانت قاعدة البيانات تحتوي على بيانات. يجب أن يظهر في build log بناء Dockerfile واحدًا؛ إذا ظهر `@workspace/*` كخدمات منفصلة، فأنت تنشر إعداد Project قديمًا وليس خدمة StoreKit الجديدة.
+Railway سيعيد البناء والنشر تلقائيًا من آخر commit على `main`، وسيعيد تشغيل migrations بشكل idempotent ثم يتخطى seed إذا كانت قاعدة البيانات تحتوي على بيانات محفوظة في Volume أو قاعدة خارجية. بدون Volume أو `DATABASE_URL` خارجي، قد تعود قاعدة البيانات الداخلية إلى حالة seed بعد إعادة إنشاء الحاوية. يجب أن يظهر في build log بناء Dockerfile واحدًا؛ إذا ظهر `@workspace/*` كخدمات منفصلة، فأنت تنشر إعداد Project قديمًا وليس خدمة StoreKit الجديدة.
 
 ## ملفات النشر داخل المستودع
 

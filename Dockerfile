@@ -38,6 +38,12 @@ RUN pnpm --filter @workspace/api-server run build
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
+# Self-contained fallback database for one-click deployments without a Railway Postgres service.
+# An external DATABASE_URL still takes precedence when provided.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # Sensible defaults — override any of these in Railway's Variables tab
 ENV NODE_ENV=production \
     PORT=8080 \
@@ -66,10 +72,12 @@ COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY scripts/package.json             ./scripts/
 RUN pnpm install --frozen-lockfile --prod
 
-# Persistent uploads directory (mount a volume here in production)
-RUN mkdir -p /app/uploads
+# Self-contained production entrypoint: starts internal PostgreSQL only when DATABASE_URL is absent,
+# then runs migrations/seed and serves the API + frontend.
+COPY scripts/start-production.sh ./scripts/start-production.sh
+RUN chmod +x ./scripts/start-production.sh \
+    && mkdir -p /app/uploads /app/data
 
 EXPOSE 8080
 
-# On every start: migrate → seed (if empty) → serve
-CMD ["node", "--enable-source-maps", "./artifacts/api-server/dist/index.mjs"]
+CMD ["/app/scripts/start-production.sh"]

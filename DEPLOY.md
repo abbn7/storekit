@@ -64,14 +64,14 @@ Replit هو الخيار الأسهل لأن قاعدة البيانات وال�
 
 ---
 
-## 🚀 النشر على Railway (VPS سحابي — مجاني جزئياً)
+## 🚀 النشر على Railway — ضغطة واحدة
 
-1. افتح [railway.app](https://railway.app)
-2. **New Project → Deploy from GitHub**
-3. أضف **PostgreSQL** service
-4. في إعدادات المشروع أضف متغيرات البيئة من `.env.example`
-5. **Build Command:** `pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/storekit build`
-6. **Start Command:** `node --enable-source-maps artifacts/api-server/dist/index.mjs`
+1. افتح [زر Deploy on Railway](https://railway.com/new/github?repo=abdelhamednada631-del/storekit) واختر المستودع إذا طلب Railway ذلك.
+2. اترك Root Directory على جذر المستودع، ولا تضف PostgreSQL service أو Build Command أو Start Command يدويًا.
+3. اضغط **Deploy**. سيبني `Dockerfile` خدمة واحدة، ويبدأ `scripts/start-production.sh` PostgreSQL الداخلي عند غياب `DATABASE_URL`، ثم يشغّل migrations وseed ويعرض المتجر والـAPI.
+4. للاستخدام الإنتاجي مع الحفاظ على البيانات، أضف Volume اختياريًا إلى `/app/data` واضبط `UPLOAD_DIR=/app/data/uploads`، أو استخدم PostgreSQL خارجيًا عبر `DATABASE_URL`.
+
+للتفاصيل الكاملة، راجع [`RAILWAY.md`](./RAILWAY.md).
 
 ---
 
@@ -102,17 +102,17 @@ Replit هو الخيار الأسهل لأن قاعدة البيانات وال�
 
 | المتغير | الوصف | مطلوب |
 |---------|-------|--------|
-| `DATABASE_URL` | رابط PostgreSQL | ✅ |
-| `SESSION_SECRET` | مفتاح عشوائي طويل | ✅ |
-| `ADMIN_PASSWORD` | كلمة سر الداشبورد | ✅ |
-| `POSTGRES_PASSWORD` | كلمة سر PostgreSQL (Docker فقط) | ✅ Docker |
+| `DATABASE_URL` | رابط PostgreSQL خارجي؛ اختياري لأن Railway one-click يبدأ PostgreSQL داخليًا | اختياري |
+| `SESSION_SECRET` | مفتاح عشوائي طويل | اختياري |
+| `ADMIN_PASSWORD` | كلمة سر الداشبورد؛ غيّر القيمة الافتراضية قبل تسليم الموقع | موصى به |
+| `POSTGRES_PASSWORD` | غير مستخدم في entrypoint Railway الحالي | لا |
 | `CLERK_PUBLISHABLE_KEY` | من [dashboard.clerk.com](https://dashboard.clerk.com) | اختياري |
 | `CLERK_SECRET_KEY` | من [dashboard.clerk.com](https://dashboard.clerk.com) | اختياري |
 | `STRIPE_SECRET_KEY` | من [dashboard.stripe.com](https://dashboard.stripe.com) | اختياري |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | من [dashboard.stripe.com](https://dashboard.stripe.com) | اختياري |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | إعدادات الإيميل | اختياري |
-| `UPLOAD_DIR` | مجلد حفظ صور المنتجات | اختياري |
-| `FRONTEND_DIST` | مسار الـ frontend المبني | Docker/Production |
+| `FRONTEND_DIST` | مسار الـ frontend المبني | مضبوط تلقائيًا |
+| `UPLOAD_DIR` | مجلد حفظ صور المنتجات؛ استخدم `/app/data/uploads` مع Volume | اختياري |
 
 ---
 
