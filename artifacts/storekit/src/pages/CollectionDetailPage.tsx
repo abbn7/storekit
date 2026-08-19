@@ -8,6 +8,8 @@ import { getProductImage, formatPrice } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { luxury, staggerContainer } from "@/lib/animations";
 import { SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { localizeCatalogText } from "@/lib/catalogI18n";
 
 function ProductGridSkeleton() {
   return (
@@ -39,6 +41,7 @@ const PRICE_RANGES = [
 ];
 
 export default function CollectionDetailPage() {
+  const { t, i18n } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
@@ -49,11 +52,13 @@ export default function CollectionDetailPage() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState(0); // index into PRICE_RANGES
 
+  const priceLabels = [t("collections.allPrices"), t("collections.under100"), t("collections.100to300"), t("collections.300to500"), t("collections.over500")];
   const { data: collection, isLoading: colLoading } = useGetCollectionBySlug(slug ?? "");
   const { data: productsData, isLoading: productsLoading } = useListProducts({
     collectionSlug: slug, sort, page: String(page), pageSize: "48", status: "active",
   } as any);
 
+  const localizedCollection = collection ? localizeCatalogText(collection, i18n.language) : null;
   const allProducts = productsData?.products ?? [];
 
   // Extract filter options from products
@@ -126,7 +131,7 @@ export default function CollectionDetailPage() {
               <>
                 <motion.img
                   src={getProductImage(collection.imageUrl, collection.id)}
-                  alt={collection.name}
+                  alt={localizedCollection?.name ?? collection.name}
                   className="w-full h-full object-cover"
                   initial={{ scale: 1.08 }}
                   animate={{ scale: 1 }}
@@ -135,14 +140,14 @@ export default function CollectionDetailPage() {
                 <div className="absolute inset-0 bg-foreground/40" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-background text-center px-6">
                   <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2, ease: luxury }}
-                    className="text-[11px] tracking-[0.3em] uppercase text-background/60 mb-3">Collection</motion.p>
+                    className="text-[11px] tracking-[0.3em] uppercase text-background/60 mb-3">{t("collections.collection")}</motion.p>
                   <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: luxury }}
                     className="font-display text-5xl lg:text-6xl font-light mb-3" style={{ fontFamily: "var(--font-display)" }}>
-                    {collection.name}
+                    {localizedCollection?.name ?? collection.name}
                   </motion.h1>
                   {collection.description && (
                     <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45, ease: luxury }}
-                      className="text-sm text-background/65 max-w-md leading-relaxed">{collection.description}</motion.p>
+                      className="text-sm text-background/65 max-w-md leading-relaxed">{localizedCollection?.description ?? collection.description}</motion.p>
                   )}
                 </div>
               </>
@@ -163,7 +168,7 @@ export default function CollectionDetailPage() {
               className={`flex items-center gap-2 px-4 py-2 text-xs tracking-[0.12em] uppercase border transition-colors ${filterOpen ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              Filter
+              {t("collections.filter")}
               {activeFilterCount > 0 && (
                 <span className={`ml-0.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-medium ${filterOpen ? "bg-background text-foreground" : "bg-foreground text-background"}`}>
                   {activeFilterCount}
@@ -182,29 +187,29 @@ export default function CollectionDetailPage() {
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="w-3 h-3" />
-                  Clear all
+                  {t("collections.clearAll")}
                 </motion.button>
               )}
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
               <motion.p key={products.length} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-muted-foreground hidden sm:block">
-                {productsLoading ? "" : `${products.length} products`}
+                {productsLoading ? "" : `${products.length} ${t("collections.products")}`}
               </motion.p>
             </AnimatePresence>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground tracking-[0.1em] uppercase hidden sm:block">Sort by</span>
+            <span className="text-xs text-muted-foreground tracking-[0.1em] uppercase hidden sm:block">{t("collections.sortBy")}</span>
             <Select value={sort} onValueChange={(v) => { setSort(v); setPage(1); }}>
               <SelectTrigger className="w-48 h-9 text-xs tracking-wide">
-                <SelectValue placeholder="Sort" />
+                <SelectValue placeholder={t("collections.sort")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="newest">{t("collections.newest")}</SelectItem>
+                <SelectItem value="price_asc">{t("collections.priceLow")}</SelectItem>
+                <SelectItem value="price_desc">{t("collections.priceHigh")}</SelectItem>
+                <SelectItem value="featured">{t("collections.featured")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -223,7 +228,7 @@ export default function CollectionDetailPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-8 border-b border-border/60 mb-8">
                 {/* Price */}
                 <div>
-                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">Price</p>
+                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">{t("collections.price")}</p>
                   <div className="flex flex-col gap-1.5">
                     {PRICE_RANGES.map((pr, i) => (
                       <button
@@ -231,7 +236,7 @@ export default function CollectionDetailPage() {
                         onClick={() => setPriceRange(i)}
                         className={`text-left text-xs py-1.5 px-2 transition-colors ${priceRange === i ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
                       >
-                        {pr.label}
+                        {priceLabels[i]}
                       </button>
                     ))}
                   </div>
@@ -240,7 +245,7 @@ export default function CollectionDetailPage() {
                 {/* Color */}
                 {allColors.length > 0 && (
                   <div>
-                    <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">Color</p>
+                    <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">{t("collections.color")}</p>
                     <div className="flex flex-wrap gap-2">
                       {allColors.map((color: string) => {
                         // Find hex for this color from any product
@@ -267,7 +272,7 @@ export default function CollectionDetailPage() {
                 {/* Size */}
                 {allSizes.length > 0 && (
                   <div>
-                    <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">Size</p>
+                    <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">{t("collections.size")}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {allSizes.map((size: string) => {
                         const active = selectedSizes.includes(size);
@@ -298,12 +303,12 @@ export default function CollectionDetailPage() {
           ) : products.length === 0 ? (
             <motion.div key="empty" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.5, ease: luxury }} className="text-center py-28">
               <p className="font-display text-3xl font-light text-muted-foreground mb-4" style={{ fontFamily: "var(--font-display)" }}>
-                No products found
+                {t("collections.noProducts")}
               </p>
-              <p className="text-sm text-muted-foreground tracking-wide mb-6">Try adjusting your filters or check back soon.</p>
+              <p className="text-sm text-muted-foreground tracking-wide mb-6">{t("collections.tryAdjusting")}</p>
               {activeFilterCount > 0 && (
                 <button onClick={clearFilters} className="text-xs tracking-[0.15em] uppercase border border-border px-5 py-2.5 hover:bg-muted transition-colors">
-                  Clear Filters
+                  {t("collections.clearFilters")}
                 </button>
               )}
             </motion.div>

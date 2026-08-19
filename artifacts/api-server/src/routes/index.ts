@@ -54,7 +54,8 @@ router.use("/admin/collections", adminCollectionsRouter);
 router.use("/admin/orders", adminOrdersRouter);
 router.use("/admin/settings", adminSettingsRouter);
 router.use("/admin/analytics", adminAnalyticsRouter);
-router.use("/admin/content", adminContentRouter);
+// Content endpoints are defined in OpenAPI under /admin/testimonials and /admin/banners.
+router.use("/admin", adminContentRouter);
 router.use("/admin/lookbook", adminLookbookRouter);
 router.use("/admin/email-preview", adminEmailPreviewRouter);
 router.use("/admin/reviews", adminReviewsRouter);

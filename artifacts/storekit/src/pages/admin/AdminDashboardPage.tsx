@@ -8,6 +8,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend,
 } from "recharts";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "#f59e0b",
@@ -19,11 +20,12 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminDashboardPage() {
   useAdminGuard();
+  const { t, i18n } = useTranslation();
   const { data: analytics, isLoading } = useAdminGetAnalytics();
 
   if (isLoading) {
     return (
-      <AdminLayout title="Dashboard">
+      <AdminLayout title={t("admin.dashboard")}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           {[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-muted animate-pulse rounded" />)}
         </div>
@@ -33,13 +35,13 @@ export default function AdminDashboardPage() {
   }
 
   const stats = [
-    { label: "Total Revenue", value: formatPrice(analytics?.totalRevenue ?? 0), icon: DollarSign, sub: "All time" },
-    { label: "Total Orders", value: String(analytics?.totalOrders ?? 0), icon: ShoppingBag, sub: "All time" },
-    { label: "Active Products", value: String(analytics?.activeProducts ?? 0), icon: Package, sub: "In store" },
+    { label: t("admin.totalRevenue"), value: formatPrice(analytics?.totalRevenue ?? 0), icon: DollarSign, sub: t("admin.allTime") },
+    { label: t("admin.totalOrders"), value: String(analytics?.totalOrders ?? 0), icon: ShoppingBag, sub: t("admin.allTime") },
+    { label: t("admin.activeProducts"), value: String(analytics?.activeProducts ?? 0), icon: Package, sub: t("admin.inStore") },
   ];
 
   return (
-    <AdminLayout title="Dashboard">
+    <AdminLayout title={t("admin.dashboard")}>
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
         {stats.map(({ label, value, icon: Icon, sub }) => (
@@ -61,7 +63,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Revenue chart */}
         <div className="lg:col-span-2 bg-card border border-border p-6">
-          <h2 className="text-sm font-medium mb-6">Revenue (Last 30 Days)</h2>
+          <h2 className="text-sm font-medium mb-6">{t("admin.revenueLast30Days")}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={analytics?.revenueByDay ?? []}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -75,7 +77,7 @@ export default function AdminDashboardPage() {
 
         {/* Order status donut */}
         <div className="bg-card border border-border p-6">
-          <h2 className="text-sm font-medium mb-6">Orders by Status</h2>
+          <h2 className="text-sm font-medium mb-6">{t("admin.ordersByStatus")}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={analytics?.ordersByStatus ?? []} dataKey="count" nameKey="status" cx="50%" cy="50%" innerRadius={55} outerRadius={85}>
@@ -90,7 +92,7 @@ export default function AdminDashboardPage() {
             {(analytics?.ordersByStatus ?? []).map((s: any) => (
               <div key={s.status} className="flex items-center gap-1.5 text-xs">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: STATUS_COLORS[s.status] ?? "#6b7280" }} />
-                <span className="capitalize text-muted-foreground">{s.status}</span>
+                <span className="text-muted-foreground">{t(`admin.statusLabels.${s.status}`, { defaultValue: s.status })}</span>
                 <span className="font-medium">{s.count}</span>
               </div>
             ))}
@@ -101,7 +103,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top products */}
         <div className="bg-card border border-border p-6">
-          <h2 className="text-sm font-medium mb-6">Top Products</h2>
+          <h2 className="text-sm font-medium mb-6">{t("admin.topProducts")}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={(analytics?.topProducts ?? []).slice(0, 5)} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -117,10 +119,10 @@ export default function AdminDashboardPage() {
         <div className="bg-card border border-border p-6">
           <div className="flex items-center gap-2 mb-6">
             <AlertTriangle className="w-4 h-4 text-yellow-500" />
-            <h2 className="text-sm font-medium">Low Stock Alerts</h2>
+            <h2 className="text-sm font-medium">{t("admin.lowStockAlertsTitle")}</h2>
           </div>
           {(analytics?.lowStockVariants ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">No low stock variants</p>
+            <p className="text-sm text-muted-foreground">{t("admin.noLowStock")}</p>
           ) : (
             <div className="space-y-3">
               {(analytics?.lowStockVariants ?? []).slice(0, 6).map((v: any) => (
@@ -130,7 +132,7 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-muted-foreground">{v.size} / {v.color}</p>
                   </div>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${v.stock === 0 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
-                    {v.stock === 0 ? "Out of stock" : `${v.stock} left`}
+                    {v.stock === 0 ? t("admin.outOfStock") : `${v.stock} ${t("admin.left")}`}
                   </span>
                 </div>
               ))}
@@ -142,17 +144,17 @@ export default function AdminDashboardPage() {
       {/* Recent orders */}
       <div className="bg-card border border-border p-6 mt-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-medium">Recent Orders</h2>
-          <Link href="/admin/orders" className="text-xs text-muted-foreground hover:text-foreground transition-colors">View all</Link>
+          <h2 className="text-sm font-medium">{t("admin.recentOrders")}</h2>
+          <Link href="/admin/orders" className="text-xs text-muted-foreground hover:text-foreground transition-colors">{t("admin.viewAll")}</Link>
         </div>
         {(analytics?.recentOrders ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">No orders yet</p>
+          <p className="text-sm text-muted-foreground">{t("admin.noOrders")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  {["Order", "Date", "Status", "Total"].map(h => (
+                  {[t("admin.order"), t("admin.date"), t("admin.status"), t("admin.total")].map(h => (
                     <th key={h} className="text-left text-xs text-muted-foreground font-medium tracking-wide uppercase pb-3">{h}</th>
                   ))}
                 </tr>
@@ -161,8 +163,8 @@ export default function AdminDashboardPage() {
                 {(analytics?.recentOrders ?? []).slice(0, 5).map((order: any) => (
                   <tr key={order.id}>
                     <td className="py-3 font-medium">#{order.orderNumber}</td>
-                    <td className="py-3 text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td className="py-3"><span className="capitalize text-xs px-2 py-1 bg-muted rounded">{order.status}</span></td>
+                    <td className="py-3 text-muted-foreground">{new Date(order.createdAt).toLocaleDateString(i18n.language === "ar" ? "ar-EG" : undefined)}</td>
+                    <td className="py-3"><span className="text-xs px-2 py-1 bg-muted rounded">{t(`admin.statusLabels.${order.status}`, { defaultValue: order.status })}</span></td>
                     <td className="py-3 font-medium">{formatPrice(order.total)}</td>
                   </tr>
                 ))}

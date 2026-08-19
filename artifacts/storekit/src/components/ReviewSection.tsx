@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ThumbsUp, Check, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/react";
+import { useTranslation } from "react-i18next";
 import { luxury, staggerItem } from "@/lib/animations";
 
 interface Review {
@@ -74,6 +75,7 @@ function RatingBar({ star, count, total }: { star: number; count: number; total:
 
 export default function ReviewSection({ productId }: ReviewSectionProps) {
   const { user, isSignedIn } = useUser();
+  const { t, i18n } = useTranslation();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [avgRating, setAvgRating] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -101,8 +103,10 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
     }
   }
 
-  // Load on mount
-  useState(() => { loadReviews(); });
+  // Load reviews when the product changes.
+  useEffect(() => {
+    void loadReviews();
+  }, [productId]);
 
   const ratingCounts = [5, 4, 3, 2, 1].map((s) => ({
     star: s,
@@ -111,8 +115,8 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!formRating) { setError("Please select a star rating."); return; }
-    if (!formBody.trim()) { setError("Please write something about this product."); return; }
+    if (!formRating) { setError(t("review.ratingRequired")); return; }
+    if (!formBody.trim()) { setError(t("review.bodyRequired")); return; }
     setError("");
     setSubmitting(true);
     try {
@@ -135,7 +139,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
       setShowForm(false);
       setFormRating(0); setFormTitle(""); setFormBody("");
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("review.somethingWrong"));
     } finally {
       setSubmitting(false);
     }
@@ -152,9 +156,9 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
           <div>
-            <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Customer Feedback</p>
+            <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">{t("review.customerFeedback")}</p>
             <h2 className="font-display text-4xl font-light" style={{ fontFamily: "var(--font-display)" }}>
-              Reviews
+              {t("review.reviews")}
             </h2>
           </div>
           {isSignedIn && !submitted && (
@@ -164,12 +168,12 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
               whileTap={{ scale: 0.97 }}
               className="flex-shrink-0 border border-foreground px-6 py-2.5 text-xs tracking-[0.18em] uppercase hover:bg-foreground hover:text-background transition-colors"
             >
-              {showForm ? "Cancel" : "Write a Review"}
+              {showForm ? t("review.cancel") : t("review.write")}
             </motion.button>
           )}
           {submitted && (
             <div className="flex items-center gap-2 text-sm text-green-600">
-              <Check className="w-4 h-4" /> Thank you for your review!
+              <Check className="w-4 h-4" /> {t("review.thankYou")}
             </div>
           )}
         </div>
@@ -187,25 +191,25 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
               className="bg-muted/30 border border-border p-6 mb-10 space-y-5 overflow-hidden"
             >
               <div>
-                <p className="text-xs tracking-[0.15em] uppercase font-medium mb-2">Your Rating *</p>
+                <p className="text-xs tracking-[0.15em] uppercase font-medium mb-2">{t("review.yourRating")}</p>
                 <Stars rating={formRating} interactive size="lg" onRate={setFormRating} />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs tracking-[0.12em] uppercase font-medium">Review Title</label>
+                <label className="text-xs tracking-[0.12em] uppercase font-medium">{t("review.title")}</label>
                 <input
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Summarise your experience"
+                  placeholder={t("review.titlePlaceholder")}
                   className="w-full border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:border-foreground/50 transition-colors"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs tracking-[0.12em] uppercase font-medium">Your Review *</label>
+                <label className="text-xs tracking-[0.12em] uppercase font-medium">{t("review.body")}</label>
                 <textarea
                   value={formBody}
                   onChange={(e) => setFormBody(e.target.value)}
-                  placeholder="Tell others about this product..."
+                  placeholder={t("review.bodyPlaceholder")}
                   rows={4}
                   className="w-full border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:border-foreground/50 transition-colors resize-none"
                 />
@@ -219,7 +223,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                 className="bg-foreground text-background px-8 py-3 text-xs tracking-[0.18em] uppercase hover:bg-foreground/85 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Submit Review
+                {t("review.submit")}
               </motion.button>
             </motion.form>
           )}
@@ -243,7 +247,7 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                     </p>
                     <Stars rating={Math.round(avgRating)} size="md" />
                     <p className="text-xs text-muted-foreground mt-2">
-                      {reviews.length} review{reviews.length !== 1 ? "s" : ""}
+                      {reviews.length} {reviews.length === 1 ? t("review.reviewCount") : t("review.reviewsCount")}
                     </p>
                   </div>
                 </div>
@@ -260,10 +264,10 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
               <div className="text-center py-16">
                 <Star className="w-10 h-10 text-muted-foreground/30 mx-auto mb-4" />
                 <p className="font-display text-2xl font-light text-muted-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                  No reviews yet
+                  {t("review.noReviews")}
                 </p>
                 {isSignedIn && (
-                  <p className="text-sm text-muted-foreground mt-2">Be the first to share your thoughts.</p>
+                  <p className="text-sm text-muted-foreground mt-2">{t("review.beFirst")}</p>
                 )}
               </div>
             ) : (
@@ -284,12 +288,12 @@ export default function ReviewSection({ productId }: ReviewSectionProps) {
                           <p className="font-medium text-sm">{review.authorName}</p>
                           {review.isVerifiedPurchase && (
                             <span className="flex items-center gap-1 text-[10px] tracking-[0.1em] uppercase text-green-600 bg-green-50 px-2 py-0.5">
-                              <Check className="w-3 h-3" /> Verified Purchase
+                              <Check className="w-3 h-3" /> {t("review.verified")}
                             </span>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(review.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                          {new Date(review.createdAt).toLocaleDateString(i18n.language === "ar" ? "ar-EG" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
                         </p>
                       </div>
                       <Stars rating={review.rating} size="sm" />

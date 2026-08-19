@@ -63,7 +63,7 @@ export default function NewsletterPopup() {
             <div className="relative h-32 bg-foreground overflow-hidden">
               <div
                 className="absolute inset-0 bg-cover bg-center opacity-60"
-                style={{ backgroundImage: "url(https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80)" }}
+                style={{ backgroundImage: "url(/images/fashion/fashion-editorial.jpg)" }}
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/60" />
               <button

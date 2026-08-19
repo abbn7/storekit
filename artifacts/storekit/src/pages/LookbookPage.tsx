@@ -9,6 +9,7 @@ import { formatPrice, getProductImage } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { luxury, staggerItem } from "@/lib/animations";
+import { useTranslation } from "react-i18next";
 
 interface LookbookTag {
   id: string;
@@ -36,6 +37,7 @@ interface LookbookEntry {
 }
 
 function ProductTagPopover({ tag, onClose }: { tag: LookbookTag; onClose: () => void }) {
+  const { t } = useTranslation();
   const { addItem, openCart } = useCartStore();
   const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
   const { product } = tag;
@@ -113,7 +115,7 @@ function ProductTagPopover({ tag, onClose }: { tag: LookbookTag; onClose: () => 
             href={`/products/${product.slug}`}
             className="flex-1 text-center text-[10px] tracking-[0.12em] uppercase border border-border px-2 py-2 hover:bg-muted transition-colors"
           >
-            Details
+            {t("lookbook.details")}
           </Link>
           <button
             disabled={inStockVariants.length === 0}
@@ -136,7 +138,7 @@ function ProductTagPopover({ tag, onClose }: { tag: LookbookTag; onClose: () => 
             className="flex-1 flex items-center justify-center gap-1 text-[10px] tracking-[0.12em] uppercase bg-foreground text-background px-2 py-2 hover:bg-foreground/85 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ShoppingBag className="w-3 h-3" />
-            Add
+            {t("lookbook.add")}
           </button>
         </div>
       </div>
@@ -145,6 +147,7 @@ function ProductTagPopover({ tag, onClose }: { tag: LookbookTag; onClose: () => 
 }
 
 function LookbookCard({ entry, index }: { entry: LookbookEntry; index: number }) {
+  const { t } = useTranslation();
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const imgRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +167,7 @@ function LookbookCard({ entry, index }: { entry: LookbookEntry; index: number })
       >
         {/* Editorial image */}
         <motion.img
-          src={entry.imageUrl}
+          src={getProductImage(entry.imageUrl, entry.id)}
           alt={entry.title}
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.03 }}
@@ -226,7 +229,7 @@ function LookbookCard({ entry, index }: { entry: LookbookEntry; index: number })
           {entry.tags.length > 0 && (
             <p className="text-white/60 text-[10px] mt-2 flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-white/80 inline-block" />
-              {entry.tags.length} shoppable {entry.tags.length === 1 ? "item" : "items"}
+              {entry.tags.length} {t("lookbook.shoppable")} {entry.tags.length === 1 ? t("lookbook.item") : t("lookbook.items")}
             </p>
           )}
         </div>
@@ -242,6 +245,7 @@ const staggerContainer = {
 };
 
 export default function LookbookPage() {
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
   const { data, isLoading } = useQuery({
@@ -274,7 +278,7 @@ export default function LookbookPage() {
             transition={{ duration: 0.6 }}
             className="text-[11px] tracking-[0.35em] uppercase text-muted-foreground mb-4"
           >
-            Editorial
+            {t("lookbook.editorial")}
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
@@ -283,7 +287,7 @@ export default function LookbookPage() {
             className="font-display text-5xl sm:text-6xl font-light mb-5 leading-none"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Lookbook
+            {t("lookbook.title")}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
@@ -291,7 +295,7 @@ export default function LookbookPage() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-muted-foreground text-sm leading-relaxed"
           >
-            Tap the white dots on each image to discover and shop the pieces directly.
+            {t("lookbook.intro")}
           </motion.p>
         </div>
 
@@ -302,7 +306,7 @@ export default function LookbookPage() {
           transition={{ delay: 1.2, duration: 0.6 }}
           className="flex flex-col items-center mt-10 gap-1 text-muted-foreground"
         >
-          <span className="text-[9px] tracking-[0.25em] uppercase">Scroll</span>
+          <span className="text-[9px] tracking-[0.25em] uppercase">{t("lookbook.scroll")}</span>
           <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 1.4, repeat: Infinity }}>
             <ChevronDown className="w-4 h-4" />
           </motion.div>
@@ -324,7 +328,7 @@ export default function LookbookPage() {
                   : "border-border/60 text-muted-foreground hover:border-foreground hover:text-foreground"
               }`}
             >
-              {s === "all" ? "All Seasons" : s}
+              {s === "all" ? t("lookbook.allSeasons") : s}
             </motion.button>
           ))}
         </div>
@@ -344,7 +348,7 @@ export default function LookbookPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-24 text-muted-foreground">
-            <p>No lookbook entries found.</p>
+            <p>{t("lookbook.noEntries")}</p>
           </div>
         ) : (
           <AnimatePresence mode="wait">
@@ -365,15 +369,15 @@ export default function LookbookPage() {
 
       {/* Bottom CTA */}
       <section className="border-t border-border bg-muted/30 py-16 text-center px-4">
-        <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-3">Shop The Edit</p>
+        <p className="text-[11px] tracking-[0.3em] uppercase text-muted-foreground mb-3">{t("lookbook.shopTheEdit")}</p>
         <h2 className="font-display text-3xl font-light mb-6" style={{ fontFamily: "var(--font-display)" }}>
-          Discover All Collections
+          {t("lookbook.discoverCollections")}
         </h2>
         <Link
           href="/collections"
           className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase border border-foreground px-8 py-3.5 hover:bg-foreground hover:text-background transition-colors duration-300"
         >
-          View Collections
+          {t("lookbook.viewCollections")}
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </section>

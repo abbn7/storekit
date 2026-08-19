@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Ruler } from "lucide-react";
 import { luxury } from "@/lib/animations";
+import { useTranslation } from "react-i18next";
 
 const SIZES = [
   { label: "XS", eu: "32–34", uk: "6–8", us: "2–4", bust: "82–86", waist: "63–67", hips: "87–91" },
@@ -11,7 +12,8 @@ const SIZES = [
   { label: "XL", eu: "48–50", uk: "22–24", us: "18–20", bust: "108–114", waist: "89–95", hips: "113–119" },
 ];
 
-export default function SizeGuide() {
+export default function SizeGuide({ label }: { label?: string }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [unit, setUnit] = useState<"cm" | "in">("cm");
 
@@ -30,7 +32,7 @@ export default function SizeGuide() {
         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
       >
         <Ruler className="w-3.5 h-3.5" />
-        Size Guide
+        {label ?? t("product.sizeGuide")}
       </button>
 
       <AnimatePresence>
@@ -55,9 +57,9 @@ export default function SizeGuide() {
               {/* Header */}
               <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
                 <div>
-                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">Fit Guide</p>
+                  <p className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">{t("product.fitGuide")}</p>
                   <h2 className="font-display text-2xl font-light" style={{ fontFamily: "var(--font-display)" }}>
-                    Size Chart
+                    {t("product.sizeChart")}
                   </h2>
                 </div>
                 <div className="flex items-center gap-3">
@@ -85,7 +87,7 @@ export default function SizeGuide() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        {["Size", "EU", "UK", "US", `Bust (${unit})`, `Waist (${unit})`, `Hips (${unit})`].map((h) => (
+                        {[t("product.size"), "EU", "UK", "US", `${t("product.bust")} (${unit})`, `${t("product.waist")} (${unit})`, `${t("product.hips")} (${unit})`].map((h) => (
                           <th key={h} className="text-left text-[11px] text-muted-foreground tracking-wide py-2.5 pr-4 font-normal">
                             {h}
                           </th>
@@ -116,12 +118,12 @@ export default function SizeGuide() {
 
                 {/* How to measure */}
                 <div className="mt-6 pt-6 border-t border-border">
-                  <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4">How to Measure</h3>
+                  <h3 className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4">{t("product.howToMeasure")}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
-                      { label: "Bust", desc: "Measure around the fullest part of your chest, keeping the tape parallel to the floor." },
-                      { label: "Waist", desc: "Measure around your natural waistline, the narrowest part of your torso." },
-                      { label: "Hips", desc: "Measure around the fullest part of your hips, keeping the tape parallel to the floor." },
+                      { label: t("product.bust"), desc: t("product.bustGuide") },
+                      { label: t("product.waist"), desc: t("product.waistGuide") },
+                      { label: t("product.hips"), desc: t("product.hipsGuide") },
                     ].map((item) => (
                       <div key={item.label} className="space-y-1.5">
                         <p className="text-xs font-medium">{item.label}</p>
@@ -132,7 +134,7 @@ export default function SizeGuide() {
                 </div>
 
                 <p className="mt-4 text-xs text-muted-foreground/60">
-                  All measurements are in {unit}. If you're between sizes, we recommend sizing up for a relaxed fit.
+                  {t("product.betweenSizes", { unit })}
                 </p>
               </div>
             </motion.div>

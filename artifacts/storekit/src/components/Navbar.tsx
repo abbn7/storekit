@@ -21,7 +21,8 @@ export default function Navbar() {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const lastScrollY = useRef(0);
 
-  const { itemCount, openCart }       = useCartStore();
+  const { items: cartItems, openCart } = useCartStore();
+  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const { items: wishlistItems }      = useWishlistStore();
   const [location]                    = useLocation();
   const { data: config }              = useGetStoreConfig();
@@ -48,7 +49,7 @@ export default function Navbar() {
   const navLinks = [
     { label: t("nav.collections"),  href: "/collections" },
     { label: t("nav.newArrivals"),   href: "/collections/new-arrivals" },
-    { label: "Lookbook",             href: "/lookbook" },
+    { label: t("lookbook.title"),     href: "/lookbook" },
     { label: t("nav.about"),         href: "/about" },
   ];
 
@@ -58,26 +59,27 @@ export default function Navbar() {
   }
 
   /* ── Shared icon button ─────────────────────────────────────── */
-  const iconBtn = "p-1.5 text-foreground/60 hover:text-foreground transition-colors";
+  const iconBtn = "icon-glass text-foreground/70 hover:text-foreground";
 
   return (
     <>
       <motion.nav
-        className={`fixed top-10 left-0 right-0 z-40 transition-all duration-500 ${
-          isScrolled
-            ? "bg-background/80 backdrop-blur-2xl border-b border-border/50 shadow-sm"
-            : "bg-transparent"
+        className={`site-nav fixed top-[var(--announcement-height)] left-0 right-0 z-40 transition-all duration-500 ${
+                      isScrolled
+            ? "glass-surface border-b border-border/45 shadow-lg"
+            : "bg-background/72 backdrop-blur-xl border-b border-border/25"
+
         }`}
         animate={{ y: isHidden ? -120 : 0 }}
         transition={{ duration: 0.4, ease: luxury }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 safe-inline">
+            <div className="flex items-center justify-between h-16 lg:h-20">
 
             {/* Logo */}
             <Link href="/" className="flex-shrink-0">
               <motion.span
-                className="font-accent tracking-[0.22em] text-xl"
+                className="site-logo font-accent tracking-[0.22em] text-[15px] sm:text-xl"
                 style={{ fontFamily: "var(--font-accent)" }}
                 whileHover={{ letterSpacing: "0.28em" }}
                 transition={{ duration: 0.4, ease: luxury }}
@@ -113,14 +115,14 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-1">
 
               {/* Search */}
-              <Link href="/search">
+              <Link href="/search" aria-label={t("nav.search")} title={t("nav.search")}>
                 <motion.div className={iconBtn} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}>
                   <Search className="w-[18px] h-[18px]" />
                 </motion.div>
               </Link>
 
               {/* Wishlist */}
-              <Link href="/account/wishlist" className="relative">
+              <Link href="/account/wishlist" className="relative" aria-label={t("nav.wishlist")} title={t("nav.wishlist")}>
                 <motion.div className={iconBtn} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}>
                   <Heart className="w-[18px] h-[18px]" />
                   <AnimatePresence>
@@ -138,7 +140,7 @@ export default function Navbar() {
               </Link>
 
               {/* Account */}
-              <Link href="/account">
+              <Link href="/account" aria-label={t("nav.account")} title={t("nav.account")}>
                 <motion.div className={iconBtn} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}>
                   <User className="w-[18px] h-[18px]" />
                 </motion.div>
@@ -150,7 +152,8 @@ export default function Navbar() {
                   onClick={() => setShowLangMenu(v => !v)}
                   className={`${iconBtn} flex items-center gap-1`}
                   whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}
-                  title="Switch language"
+                  title={t("admin.language")}
+                  aria-label={t("admin.language")}
                 >
                   <Globe className="w-[17px] h-[17px]" />
                   <span className="text-[10px] tracking-widest font-medium uppercase">
@@ -166,7 +169,7 @@ export default function Navbar() {
                       exit={{ opacity: 0, y: -8, scale: 0.95 }}
                       transition={{ duration: 0.18 }}
                       onMouseLeave={() => setShowLangMenu(false)}
-                      className="absolute top-full mt-2 right-0 bg-background/95 backdrop-blur-xl border border-border rounded-xl shadow-lg overflow-hidden min-w-[120px]"
+                      className="glass-card absolute top-full mt-3 right-0 rounded-2xl shadow-xl overflow-hidden min-w-[132px] p-1"
                     >
                       {(["en", "ar"] as const).map((lang) => (
                         <button
@@ -176,7 +179,7 @@ export default function Navbar() {
                             currentLang === lang ? "text-foreground font-medium" : "text-muted-foreground"
                           }`}
                         >
-                          <span className="text-base">{lang === "en" ? "🇺🇸" : "🇸🇦"}</span>
+                          <span className="text-[10px] tracking-[0.18em] uppercase text-accent">{lang}</span>
                           {lang === "en" ? "English" : "العربية"}
                           {currentLang === lang && (
                             <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent" />
@@ -194,7 +197,8 @@ export default function Navbar() {
                 className={iconBtn}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.92 }}
-                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                title={theme === "dark" ? t("misc.switchLight") : t("misc.switchDark")}
+                aria-label={theme === "dark" ? t("misc.switchLight") : t("misc.switchDark")}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
@@ -213,7 +217,7 @@ export default function Navbar() {
               </motion.button>
 
               {/* Admin */}
-              <Link href="/admin" title="Admin Panel">
+              <Link href="/admin" title={t("nav.admin")} aria-label={t("nav.admin")}>
                 <motion.div className={`${iconBtn} !text-foreground/25 hover:!text-foreground/50`} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}>
                   <LayoutDashboard className="w-4 h-4" />
                 </motion.div>
@@ -222,7 +226,8 @@ export default function Navbar() {
               {/* Cart */}
               <motion.button
                 onClick={openCart}
-                className={`relative ${iconBtn}`}
+                className={`relative icon-glass`}
+                aria-label={t("nav.cart")}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.92 }}
               >
@@ -245,14 +250,9 @@ export default function Navbar() {
             </div>
 
             {/* Mobile icons */}
-            <div className="flex lg:hidden items-center gap-2">
-              {/* Theme toggle mobile */}
-              <motion.button onClick={toggleTheme} className={iconBtn} whileTap={{ scale: 0.92 }}>
-                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </motion.button>
-
-              <motion.button onClick={openCart} className={`relative ${iconBtn}`} whileTap={{ scale: 0.92 }}>
-                <ShoppingBag className="w-5 h-5" />
+            <div className="flex lg:hidden items-center gap-1">
+              <motion.button onClick={openCart} className="relative inline-flex min-h-11 min-w-11 items-center justify-center text-foreground/80" aria-label={t("nav.cart")} whileTap={{ scale: 0.92 }}>
+                <ShoppingBag className="w-[18px] h-[18px]" />
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-foreground text-background text-[10px] rounded-full flex items-center justify-center">
                     {itemCount}
@@ -260,7 +260,7 @@ export default function Navbar() {
                 )}
               </motion.button>
 
-              <motion.button onClick={() => setIsMobileOpen(!isMobileOpen)} className={iconBtn} whileTap={{ scale: 0.92 }}>
+              <motion.button onClick={() => setIsMobileOpen(!isMobileOpen)} className="inline-flex min-h-11 min-w-11 items-center justify-center text-foreground/80" aria-label={isMobileOpen ? t("admin.closeNavigation") : t("admin.openNavigation")} aria-expanded={isMobileOpen} whileTap={{ scale: 0.92 }}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={isMobileOpen ? "close" : "open"}
@@ -269,7 +269,7 @@ export default function Navbar() {
                     exit={{ opacity: 0, rotate: 90 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    {isMobileOpen ? <X className="w-[18px] h-[18px]" /> : <Menu className="w-[18px] h-[18px]" />}
                   </motion.div>
                 </AnimatePresence>
               </motion.button>
@@ -286,7 +286,7 @@ export default function Navbar() {
             animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
             exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.45, ease: luxury }}
-            className="fixed inset-0 z-30 bg-background pt-[calc(40px+64px)] flex flex-col"
+            className="noise-overlay fixed inset-0 z-30 bg-background/98 backdrop-blur-2xl pt-[calc(var(--announcement-height)+var(--nav-height))] pb-[var(--safe-bottom)] flex flex-col"
           >
             <div className="flex flex-col items-center justify-center flex-1 gap-8">
               {navLinks.map((link, i) => (
@@ -328,15 +328,24 @@ export default function Navbar() {
                 ))}
               </motion.div>
 
+              <motion.button
+                onClick={toggleTheme}
+                aria-label={theme === "dark" ? t("misc.switchLight") : t("misc.switchDark")}
+                className="mt-2 inline-flex min-h-11 items-center gap-2 border-b border-border pb-2 text-xs tracking-[0.16em] uppercase text-muted-foreground"
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === "dark" ? t("misc.switchLight") : t("misc.switchDark")}
+              </motion.button>
+
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.38, ease: luxury, duration: 0.5 }}
                 className="flex items-center gap-8"
               >
-                <Link href="/search"><Search className="w-6 h-6" /></Link>
-                <Link href="/account/wishlist"><Heart className="w-6 h-6" /></Link>
-                <Link href="/account"><User className="w-6 h-6" /></Link>
+                  <Link href="/search" aria-label={t("nav.search")} className="inline-flex min-h-11 min-w-11 items-center justify-center"><Search className="w-5 h-5" /></Link>
+                <Link href="/account/wishlist" aria-label={t("nav.wishlist")} className="inline-flex min-h-11 min-w-11 items-center justify-center"><Heart className="w-5 h-5" /></Link>
+                <Link href="/account" aria-label={t("nav.account")} className="inline-flex min-h-11 min-w-11 items-center justify-center"><User className="w-5 h-5" /></Link>
               </motion.div>
             </div>
           </motion.div>

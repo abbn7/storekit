@@ -1,12 +1,29 @@
 import { Router } from "express";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const router = Router();
 const ADMIN_COOKIE = "sk_admin_session";
-const SESSION_VALUE = "authenticated";
+const SESSION_PAYLOAD = "storekit-admin-session-v1";
+
+function getAdminSecret(): string {
+  return process.env.ADMIN_SECRET || process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || "storekit-local-admin-secret";
+}
+
+function createSessionToken(): string {
+  return createHmac("sha256", getAdminSecret()).update(SESSION_PAYLOAD).digest("hex");
+}
+
+function verifySessionToken(token: string | undefined): boolean {
+  if (!token) return false;
+  const expected = createSessionToken();
+  const provided = Buffer.from(token, "utf8");
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  return provided.length === expectedBuffer.length && timingSafeEqual(provided, expectedBuffer);
+}
 
 function verifyAdminAuth(req: any, res: any): boolean {
   const cookie = req.cookies?.[ADMIN_COOKIE];
-  if (cookie !== SESSION_VALUE) {
+  if (!verifySessionToken(cookie)) {
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }
@@ -24,7 +41,7 @@ router.post("/login", async (req, res): Promise<void> => {
       return;
     }
 
-    res.cookie(ADMIN_COOKIE, SESSION_VALUE, {
+    res.cookie(ADMIN_COOKIE, createSessionToken(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

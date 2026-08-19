@@ -49,7 +49,7 @@ export async function runMigrations(): Promise<void> {
 
 // ─── Seed ────────────────────────────────────────────────────────────────────
 
-const PICSUM = "https://picsum.photos/seed";
+const ASSET = (name: string) => `/images/fashion/${name}`;
 
 export async function seedIfEmpty(): Promise<void> {
   // Only seed in production — dev seeds manually via `pnpm --filter @workspace/scripts run seed`
@@ -75,7 +75,7 @@ export async function seedIfEmpty(): Promise<void> {
     locale: "en-US",
     heroHeading: "The New\nSeason\nAwaits",
     heroSubheading: "Thoughtfully designed for those who move through the world with intention.",
-    heroImageUrl: `${PICSUM}/fashion-hero/800/1000`,
+    heroImageUrl: `${ASSET("hero-luxury-mobile.jpg")}`,
     announcementText: "Free shipping on orders over $100 · New arrivals every week · Sustainably made",
     shippingThreshold: 10000,
     contactEmail: "hello@storekit.shop",
@@ -86,11 +86,11 @@ export async function seedIfEmpty(): Promise<void> {
 
   // Collections
   const collections = await db.insert(collectionsTable).values([
-    { slug: "new-arrivals", name: "New Arrivals", description: "The latest additions to our collection.", imageUrl: `${PICSUM}/collection-new/600/750`, isFeatured: true, sortOrder: 1 },
-    { slug: "essentials", name: "Essentials", description: "Timeless pieces that anchor every wardrobe.", imageUrl: `${PICSUM}/collection-essentials/600/750`, isFeatured: true, sortOrder: 2 },
-    { slug: "outerwear", name: "Outerwear", description: "Refined coats and jackets for every season.", imageUrl: `${PICSUM}/collection-outer/600/750`, isFeatured: true, sortOrder: 3 },
-    { slug: "knitwear", name: "Knitwear", description: "Handcrafted knits with exceptional texture.", imageUrl: `${PICSUM}/collection-knit/600/750`, isFeatured: false, sortOrder: 4 },
-    { slug: "accessories", name: "Accessories", description: "The finishing details that complete the look.", imageUrl: `${PICSUM}/collection-acc/600/750`, isFeatured: false, sortOrder: 5 },
+    { slug: "new-arrivals", name: "New Arrivals", description: "The latest additions to our collection.", imageUrl: `${ASSET("editorial-black.jpg")}`, isFeatured: true, sortOrder: 1 },
+    { slug: "essentials", name: "Essentials", description: "Timeless pieces that anchor every wardrobe.", imageUrl: `${ASSET("fashion-product.jpg")}`, isFeatured: true, sortOrder: 2 },
+    { slug: "outerwear", name: "Outerwear", description: "Refined coats and jackets for every season.", imageUrl: `${ASSET("high-fashion.jpg")}`, isFeatured: true, sortOrder: 3 },
+    { slug: "knitwear", name: "Knitwear", description: "Handcrafted knits with exceptional texture.", imageUrl: `${ASSET("fashion-editorial.jpg")}`, isFeatured: false, sortOrder: 4 },
+    { slug: "accessories", name: "Accessories", description: "The finishing details that complete the look.", imageUrl: `${ASSET("lookbook-grey.jpg")}`, isFeatured: false, sortOrder: 5 },
   ]).onConflictDoNothing().returning();
 
   const col = (slug: string) => collections.find(c => c.slug === slug)!;
@@ -113,9 +113,9 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 89500, status: "active", isFeatured: true, isNewArrival: true,
       material: "100% Fine Merino Wool (outer), 100% Silk Habotai (lining)", careInstructions: "Dry clean only. Store folded, never hung.",
       images: [
-        { url: `${PICSUM}/coat1a/800/1000`, alt: "Oversized Merino Coat front", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/coat1b/800/1000`, alt: "Oversized Merino Coat back", isPrimary: false, sortOrder: 1 },
-        { url: `${PICSUM}/coat1c/800/1000`, alt: "Oversized Merino Coat detail", isPrimary: false, sortOrder: 2 },
+        { url: `${ASSET("minimal-outfit.jpg")}`, alt: "Oversized Merino Coat front", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("editorial-black.jpg")}`, alt: "Oversized Merino Coat back", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("fashion-editorial.jpg")}`, alt: "Oversized Merino Coat detail", isPrimary: false, sortOrder: 2 },
       ],
       variants: [
         { size: "XS", color: "Camel", colorHex: "#C19A6B", sku: "MC-XS-CAM", stock: 3, price: 89500 },
@@ -136,8 +136,8 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 42500, compareAtPrice: 52500, status: "active", isFeatured: true, isNewArrival: false,
       material: "100% Silk Charmeuse", careInstructions: "Hand wash cold or dry clean. Lay flat to dry.",
       images: [
-        { url: `${PICSUM}/silk1a/800/1000`, alt: "Silk Slip Dress front", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/silk1b/800/1000`, alt: "Silk Slip Dress side", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("fashion-product.jpg")}`, alt: "Silk Slip Dress front", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("lookbook-grey.jpg")}`, alt: "Silk Slip Dress side", isPrimary: false, sortOrder: 1 },
       ],
       variants: [
         { size: "XS", color: "Ivory", colorHex: "#FFFFF0", sku: "SD-XS-IVY", stock: 5, price: 42500, compareAtPrice: 52500 },
@@ -158,8 +158,8 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 31500, status: "active", isFeatured: true, isNewArrival: true,
       material: "100% Grade-A Mongolian Cashmere (12-ply)", careInstructions: "Hand wash cold with wool detergent. Reshape and lay flat to dry.",
       images: [
-        { url: `${PICSUM}/cashmere1a/800/1000`, alt: "Ribbed Cashmere Turtleneck", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/cashmere1b/800/1000`, alt: "Ribbed Cashmere Turtleneck detail", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("fashion-editorial.jpg")}`, alt: "Ribbed Cashmere Turtleneck", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("high-fashion.jpg")}`, alt: "Ribbed Cashmere Turtleneck detail", isPrimary: false, sortOrder: 1 },
       ],
       variants: [
         { size: "XS", color: "Oat", colorHex: "#DDD5C8", sku: "CT-XS-OAT", stock: 10, price: 31500 },
@@ -181,8 +181,8 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 24500, status: "active", isFeatured: false, isNewArrival: true,
       material: "100% Washed Belgian Linen", careInstructions: "Machine wash cool on gentle cycle. Line dry or tumble dry low.",
       images: [
-        { url: `${PICSUM}/linen1a/800/1000`, alt: "Wide-Leg Linen Trousers front", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/linen1b/800/1000`, alt: "Wide-Leg Linen Trousers detail", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("high-fashion.jpg")}`, alt: "Wide-Leg Linen Trousers front", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("fashion-product.jpg")}`, alt: "Wide-Leg Linen Trousers detail", isPrimary: false, sortOrder: 1 },
       ],
       variants: [
         { size: "XS", color: "Natural", colorHex: "#E8DCC8", sku: "LT-XS-NAT", stock: 7, price: 24500 },
@@ -202,9 +202,9 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 67500, status: "active", isFeatured: true, isNewArrival: false,
       material: "73% Cotton, 27% Linen (Japanese mill)", careInstructions: "Dry clean recommended. Steam to refresh.",
       images: [
-        { url: `${PICSUM}/blazer1a/800/1000`, alt: "Structured Canvas Blazer front", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/blazer1b/800/1000`, alt: "Structured Canvas Blazer back", isPrimary: false, sortOrder: 1 },
-        { url: `${PICSUM}/blazer1c/800/1000`, alt: "Structured Canvas Blazer detail", isPrimary: false, sortOrder: 2 },
+        { url: `${ASSET("editorial-black.jpg")}`, alt: "Structured Canvas Blazer front", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("minimal-outfit.jpg")}`, alt: "Structured Canvas Blazer back", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("fashion-editorial.jpg")}`, alt: "Structured Canvas Blazer detail", isPrimary: false, sortOrder: 2 },
       ],
       variants: [
         { size: "XS", color: "Sand", colorHex: "#C2B280", sku: "BL-XS-SND", stock: 3, price: 67500 },
@@ -224,8 +224,8 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 38500, status: "active", isFeatured: false, isNewArrival: true,
       material: "Full-grain vegetable-tanned Italian leather", careInstructions: "Condition with leather balm every 3-6 months. Store stuffed in dust bag.",
       images: [
-        { url: `${PICSUM}/bag1a/800/1000`, alt: "Leather Bucket Bag front", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/bag1b/800/1000`, alt: "Leather Bucket Bag detail", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("fashion-product.jpg")}`, alt: "Leather Bucket Bag front", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("lookbook-grey.jpg")}`, alt: "Leather Bucket Bag detail", isPrimary: false, sortOrder: 1 },
       ],
       variants: [
         { size: "One Size", color: "Tan", colorHex: "#D2B48C", sku: "BB-OS-TAN", stock: 6, price: 38500 },
@@ -240,7 +240,7 @@ export async function seedIfEmpty(): Promise<void> {
       shortDescription: "Extra-fine merino, open-knit, generous length.",
       basePrice: 12500, compareAtPrice: 15000, status: "active", isFeatured: false, isNewArrival: false,
       material: "100% Extra-Fine Merino Wool", careInstructions: "Hand wash cold. Lay flat to dry.",
-      images: [{ url: `${PICSUM}/scarf1a/800/1000`, alt: "Merino Wool Scarf", isPrimary: true, sortOrder: 0 }],
+      images: [{ url: `${ASSET("lookbook-grey.jpg")}`, alt: "Merino Wool Scarf", isPrimary: true, sortOrder: 0 }],
       variants: [
         { size: "One Size", color: "Camel", colorHex: "#C19A6B", sku: "SC-OS-CAM", stock: 15, price: 12500, compareAtPrice: 15000 },
         { size: "One Size", color: "Ivory", colorHex: "#FFFFF0", sku: "SC-OS-IVY", stock: 12, price: 12500, compareAtPrice: 15000 },
@@ -256,8 +256,8 @@ export async function seedIfEmpty(): Promise<void> {
       basePrice: 19500, status: "active", isFeatured: false, isNewArrival: false,
       material: "100% Organic Egyptian Cotton Poplin", careInstructions: "Machine wash cool. Press with a warm iron while damp.",
       images: [
-        { url: `${PICSUM}/shirt1a/800/1000`, alt: "Organic Cotton Shirt front", isPrimary: true, sortOrder: 0 },
-        { url: `${PICSUM}/shirt1b/800/1000`, alt: "Organic Cotton Shirt back", isPrimary: false, sortOrder: 1 },
+        { url: `${ASSET("minimal-outfit.jpg")}`, alt: "Organic Cotton Shirt front", isPrimary: true, sortOrder: 0 },
+        { url: `${ASSET("fashion-product.jpg")}`, alt: "Organic Cotton Shirt back", isPrimary: false, sortOrder: 1 },
       ],
       variants: [
         { size: "XS", color: "White", colorHex: "#F8F8F8", sku: "CS-XS-WHT", stock: 12, price: 19500 },
@@ -302,7 +302,7 @@ export async function seedIfEmpty(): Promise<void> {
 
   // Banner
   await db.insert(bannersTable).values([
-    { imageUrl: `${PICSUM}/banner1/1400/700`, heading: "New Season, New Story", subheading: "Discover the collection crafted for those who move through the world with intention.", ctaText: "Explore Now", ctaUrl: "/collections", sortOrder: 0, isActive: true },
+    { imageUrl: `${ASSET("hero-luxury-mobile.jpg")}`, heading: "New Season, New Story", subheading: "Discover the collection crafted for those who move through the world with intention.", ctaText: "Explore Now", ctaUrl: "/collections", sortOrder: 0, isActive: true },
   ]).onConflictDoNothing();
 
   logger.info("Seed complete — store is ready.");

@@ -9,10 +9,23 @@ export function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+const FASHION_IMAGE_FALLBACKS = [
+  "/images/fashion/editorial-black.jpg",
+  "/images/fashion/lookbook-grey.jpg",
+  "/images/fashion/minimal-outfit.jpg",
+  "/images/fashion/fashion-product.jpg",
+  "/images/fashion/high-fashion.jpg",
+  "/images/fashion/fashion-editorial.jpg",
+];
+
 export function getProductImage(url: string | null | undefined, productId?: string): string {
-  if (url && url.trim() !== "") return url;
-  const seed = productId ? productId.slice(0, 8) : "default";
-  return `https://picsum.photos/seed/${seed}/800/1000`;
+  const candidate = url?.trim();
+  if (candidate && !candidate.includes("picsum.photos")) return candidate;
+  if (productId === "hero") return "/images/fashion/hero-luxury-mobile.jpg";
+
+  const source = `${productId ?? "default"}:${candidate ?? "fallback"}`;
+  const hash = Array.from(source).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return FASHION_IMAGE_FALLBACKS[hash % FASHION_IMAGE_FALLBACKS.length];
 }
 
 export function slugify(text: string): string {

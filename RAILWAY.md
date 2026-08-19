@@ -1,96 +1,88 @@
-# 🚂 دليل النشر على Railway — 3 خطوات بس
+# نشر StoreKit على Railway من GitHub
 
-> **الهدف:** ترفع الكود على GitHub وتضغط نشر — خلاص.
-> قاعدة البيانات تتنشئ وتتملأ بالبيانات تلقائياً، والمتجر يشتغل من أول تشغيل.
+StoreKit مجهز الآن ليُبنى من `Dockerfile` ويشغّل **الواجهة والـAPI في خدمة واحدة**. لا تحتاج إلى تشغيل Vite أو Express يدويًا، ولا إلى رفع ملفات `dist` إلى GitHub. Railway يقرأ `railway.json` تلقائيًا، يبني الصورة، يشغّل السيرفر، ثم يفحص `/healthz`.
 
----
+> **المطلوب فعليًا:** خدمة StoreKit + خدمة PostgreSQL داخل نفس مشروع Railway. قاعدة البيانات ليست خدمة خارجية يديرها العميل؛ Railway ينشئها داخل المشروع ويوفر `DATABASE_URL` للتطبيق.
 
-## الخطوة 1️⃣ — أنشئ مشروع من GitHub
+## النشر الأول
 
-1. اذهب إلى [railway.com](https://railway.com) وسجّل دخول بـ GitHub
-2. اضغط **"New Project"** → **"Deploy from GitHub repo"**
-3. ابحث عن الريبو `storekit` واضغط **Deploy**
-4. Railway يكتشف الـ `Dockerfile` تلقائياً ويبدأ البناء
+افتح [Railway](https://railway.com)، اختر **New Project → Deploy from GitHub repo**، ثم اختر مستودع `storekit` واضغط **Deploy Now**. Railway سيكتشف `railway.json` و`Dockerfile` تلقائيًا.
 
----
+بعد إنشاء المشروع، من لوحة المشروع اختر **New → Database → PostgreSQL**. في خدمة StoreKit أضف متغيرًا واحدًا باسم `DATABASE_URL` وقيمته Reference Variable إلى خدمة PostgreSQL:
 
-## الخطوة 2️⃣ — أضف قاعدة البيانات
+```text
+${{Postgres.DATABASE_URL}}
+```
 
-1. داخل المشروع اضغط **"New"** → **"Database"** → **"PostgreSQL"**
-2. Railway يربط `DATABASE_URL` تلقائياً — **لا تفعل شيء**
+إذا كان اسم خدمة قاعدة البيانات مختلفًا، اختر `DATABASE_URL` من قائمة Reference Variables بدل كتابة الاسم يدويًا. بعد حفظ المتغير اضغط **Deploy** مرة واحدة. عند أول تشغيل سيقوم التطبيق تلقائيًا بتشغيل migrations ثم seed للمنتجات والمجموعات والإعدادات.
 
----
+## المتغيرات الأساسية
 
-## الخطوة 3️⃣ — اضغط Deploy ✅
+يضع Dockerfile قيمًا افتراضية آمنة للتشغيل الأول، لكن يجب تغيير كلمة مرور الإدارة قبل تسليم المتجر للعميل:
 
-المتجر يبدأ تلقائياً ويفعل:
-- ✅ ينشئ كل جداول قاعدة البيانات
-- ✅ يضيف المنتجات والمجموعات والإعدادات
-- ✅ يعمل كاملاً بدون أي إجراء يدوي
-
----
-
-## 🔐 كلمات السر الافتراضية
-
-| الوصول | الرابط | الكلمة الافتراضية |
+| المتغير | الحالة | الغرض |
 |---|---|---|
-| لوحة الإدارة | `/admin` | `storekit2024` |
+| `DATABASE_URL` | **ضروري** | Reference إلى PostgreSQL داخل Railway |
+| `ADMIN_PASSWORD` | افتراضي قابل للتغيير | دخول `/admin` |
+| `ADMIN_SECRET` | اختياري | توقيع جلسات الإدارة؛ يفضّل ضبطه في production |
+| `SESSION_SECRET` | اختياري | سر جلسات التطبيق إذا استُخدم |
+| `NODE_ENV` | مضبوط في Dockerfile | `production` |
+| `PORT` | يحدده Railway | التطبيق يستمع على المنفذ الذي توفره Railway |
 
-> **غيّر كلمة السر** من Railway Variables → أضف `ADMIN_PASSWORD` بكلمتك الخاصة
+القيمة الافتراضية للإدارة هي `storekit2024` للتشغيل الأول فقط. غيّرها من **StoreKit Service → Variables** قبل تسليم الرابط للعميل.
 
----
+## الصور والاعتماد الخارجي
 
-## ⚡ متغيرات اختيارية (تضيفها متى تريد)
+الـfrontend والصور الأساسية داخل صورة التطبيق تحت `artifacts/storekit/public/images`. كما أن بيانات seed تستخدم مسارات محلية مثل `/images/fashion/hero-luxury-mobile.jpg` بدل روابط Picsum الخارجية. لذلك لا يحتاج المتجر إلى CDN صور أو خدمة API خارجية كي يعرض كتالوجه الأساسي.
 
-### 🔑 تسجيل الدخول للعملاء (Clerk)
-```
-VITE_CLERK_PUBLISHABLE_KEY = pk_live_...
-CLERK_SECRET_KEY           = sk_live_...
-```
-> بدونها: صفحات الحساب والـ Checkout مخفية (المتجر يشتغل)
+رفع الصور من لوحة الإدارة يستخدم `/app/uploads`. إذا كان العميل سيضيف صورًا من لوحة الإدارة، أضف Volume إلى خدمة StoreKit بمسار mount هو:
 
-### 💳 الدفع الحقيقي (Stripe)
-```
-STRIPE_PUBLISHABLE_KEY = pk_live_...
-STRIPE_SECRET_KEY      = sk_live_...
-```
-> بدونها: الـ Checkout يعمل في "Test Mode" (طلبات وهمية)
-
-### 🔒 رفع الصور (اختياري)
-```
-ADMIN_PASSWORD = كلمتك_الخاصة
+```text
+/app/uploads
 ```
 
----
+بدون Volume سيظل المتجر يعمل، لكن الملفات التي يرفعها العميل قد تختفي عند إعادة إنشاء الخدمة أو نشر إصدار جديد؛ لذلك يُنصح بالـVolume لأي متجر production.
 
-## 📦 Volume للصور المرفوعة
+## الدفع وتسجيل العملاء
 
-> إذا أضاف العميل صور من الداشبورد، أضف Volume لحفظها:
+المتجر يعمل افتراضيًا دون Clerk أو Stripe. التكاملات الحقيقية اختيارية، ولا تمنع تشغيل الكتالوج والسلة والطلبات الداخلية. عند الحاجة إلى حسابات العملاء أو الدفع الحقيقي، أضف مفاتيح Clerk وStripe السرية من Railway Variables، ولا تضعها في GitHub أو داخل `.env`.
 
-1. **Service → Volumes → Add Volume**
-2. **Mount Path:** `/app/uploads`
+## الاختبار بعد النشر
 
----
+بعد نجاح deployment، افتح:
 
-## 🔄 تحديث المتجر لاحقاً
+```text
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/admin
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/healthz
+https://YOUR-RAILWAY-DOMAIN.up.railway.app/api/health
+```
+
+يجب أن يعيد `/healthz` النص `ok`، وأن يعيد `/api/health` JSON يحتوي على `"ok": true`. إذا فشل deployment، راجع **Build Logs** أولًا ثم **Deploy Logs**؛ أكثر أسباب الفشل شيوعًا هي عدم ربط `DATABASE_URL` أو نسيان الضغط على Deploy بعد إضافة Reference Variable.
+
+## التحديثات اللاحقة
+
+كل تحديث يتم بالطريقة التالية:
 
 ```bash
 git add .
-git commit -m "update"
-git push
-```
-Railway يشوف الـ push ويبني ويحدّث تلقائياً — بدون أي تدخل.
-
----
-
-## 🎁 تسليم المتجر للعميل
-
-بعد ما يظهر الموقع على Railway:
-
-```
-🌐 رابط المتجر:      https://your-project.up.railway.app
-⚙️ لوحة الإدارة:     https://your-project.up.railway.app/admin
-🔑 كلمة السر:        storekit2024 (غيّرها من Variables)
+git commit -m "update storefront"
+git push origin main
 ```
 
-كل `git push` = نشر تلقائي جديد.
+Railway سيعيد البناء والنشر تلقائيًا من آخر commit على `main`، وسيعيد تشغيل migrations بشكل idempotent ثم يتخطى seed إذا كانت قاعدة البيانات تحتوي على بيانات.
+
+## ملفات النشر داخل المستودع
+
+- `Dockerfile`: يبني frontend وAPI داخل multi-stage image واحدة.
+- `railway.json`: يثبت Dockerfile وstart command وhealthcheck وrestart policy.
+- `.dockerignore`: يمنع الأسرار وملفات audit و`node_modules` من دخول build context.
+- `artifacts/api-server/src/app.ts`: يوفر `/healthz` و`/api/health` ويخدم SPA fallback.
+- `artifacts/api-server/src/startup.ts`: يشغل migrations وseed ويستخدم الصور المحلية.
+
+### مراجع Railway
+
+- [Railway Quick Start — GitHub deployment](https://docs.railway.com/quick-start)
+- [Railway Config as Code](https://docs.railway.com/config-as-code)
+- [Railway Config as Code Reference](https://docs.railway.com/config-as-code/reference)
+- [Railway PostgreSQL](https://docs.railway.com/databases/postgresql)
