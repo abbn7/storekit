@@ -4,11 +4,15 @@ StoreKit مجهز الآن ليُبنى من `Dockerfile` ويشغّل **الو�
 
 > **مهم لإصلاح Railway build:** صورة البناء والإنتاج تستخدم `node:22-bookworm-slim` بدل Alpine/musl. هذا يضمن توفر Rollup glibc native binary، بينما يتم نسخ `tsconfig.json` و`tsconfig.base.json` مع بنية الـworkspace كاملة. لا تضف Build Command مخصصًا في Railway؛ اترك Builder على `Dockerfile` كما يحدد `railway.json`.
 
-> **المطلوب فعليًا:** خدمة StoreKit + خدمة PostgreSQL داخل نفس مشروع Railway. قاعدة البيانات ليست خدمة خارجية يديرها العميل؛ Railway ينشئها داخل المشروع ويوفر `DATABASE_URL` للتطبيق.
+> **المطلوب فعليًا:** خدمة StoreKit واحدة + خدمة PostgreSQL داخل نفس مشروع Railway. قاعدة البيانات ليست خدمة خارجية يديرها العميل؛ Railway ينشئها داخل المشروع ويوفر `DATABASE_URL` للتطبيق.
+>
+> **مهم جدًا عند وجود خدمات باسم `@workspace/*`:** هذه ليست طريقة نشر StoreKit الصحيحة. إذا ظهرت خدمات `@workspace/mockup-sandbox` أو `@workspace/api-server` أو `@workspace/api-client-react` أو `@workspace/storekit` منفصلة، فالمشروع مضبوط كـmonorepo services أو Nixpacks قديم. احذف الخدمات الفاشلة القديمة، وأنشئ خدمة واحدة من **جذر المستودع** `storekit` فقط. لا تضبط Root Directory على `artifacts/storekit` أو `artifacts/api-server`، ولا تنشئ خدمة لكل package.
 
 ## النشر الأول
 
-افتح [Railway](https://railway.com)، اختر **New Project → Deploy from GitHub repo**، ثم اختر مستودع `storekit` واضغط **Deploy Now**. Railway سيكتشف `railway.json` و`Dockerfile` تلقائيًا.
+افتح [Railway](https://railway.com)، اختر **New Project → Deploy from GitHub repo**، ثم اختر مستودع `storekit` واضغط **Deploy Now**. داخل خدمة StoreKit تأكد من أن **Root Directory = `/`** وأن Builder هو **Dockerfile** وأن Dockerfile path هو `/Dockerfile`. اترك Build Command وStart Command فارغين؛ `railway.json` وDockerfile يحددان الأمر الصحيح تلقائيًا. لا تستخدم `pnpm -r build` يدويًا، لأن ذلك يشغّل packages غير production مثل mockup.
+
+إذا كانت لديك Project موجودة بالفعل، احتفظ بخدمتين فقط: خدمة StoreKit وخدمة PostgreSQL. أوقف أو احذف كل service باسم `@workspace/*` القديم، ثم اعمل Redeploy من commit حديث بعد الدمج. الملف `nixpacks.toml` موجود كمسار احتياطي، ويشغّل `build:production` فقط إذا كانت الخدمة مضبوطة على Nixpacks، لكنه لا يبرر إنشاء services منفصلة.
 
 بعد إنشاء المشروع، من لوحة المشروع اختر **New → Database → PostgreSQL**. في خدمة StoreKit أضف متغيرًا واحدًا باسم `DATABASE_URL` وقيمته Reference Variable إلى خدمة PostgreSQL:
 
@@ -72,12 +76,13 @@ git commit -m "update storefront"
 git push origin main
 ```
 
-Railway سيعيد البناء والنشر تلقائيًا من آخر commit على `main`، وسيعيد تشغيل migrations بشكل idempotent ثم يتخطى seed إذا كانت قاعدة البيانات تحتوي على بيانات.
+Railway سيعيد البناء والنشر تلقائيًا من آخر commit على `main`، وسيعيد تشغيل migrations بشكل idempotent ثم يتخطى seed إذا كانت قاعدة البيانات تحتوي على بيانات. يجب أن يظهر في build log بناء Dockerfile واحدًا؛ إذا ظهر `@workspace/*` كخدمات منفصلة، فأنت تنشر إعداد Project قديمًا وليس خدمة StoreKit الجديدة.
 
 ## ملفات النشر داخل المستودع
 
 - `Dockerfile`: يبني frontend وAPI داخل multi-stage image واحدة.
 - `railway.json`: يثبت Dockerfile وstart command وhealthcheck وrestart policy.
+- `nixpacks.toml`: fallback يمنع recursive workspace build ويشغّل StoreKit كخدمة واحدة إذا تم اختيار Nixpacks.
 - `.dockerignore`: يمنع الأسرار وملفات audit و`node_modules` من دخول build context.
 - `artifacts/api-server/src/app.ts`: يوفر `/healthz` و`/api/health` ويخدم SPA fallback.
 - `artifacts/api-server/src/startup.ts`: يشغل migrations وseed ويستخدم الصور المحلية.

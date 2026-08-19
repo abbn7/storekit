@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm run build:production"]
+
+[start]
+cmd = "FRONTEND_DIST=artifacts/storekit/dist/public NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"
