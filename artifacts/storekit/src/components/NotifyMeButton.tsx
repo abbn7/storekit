@@ -102,7 +102,7 @@ export default function NotifyMeButton({ variantId, productId, variantLabel }: N
                   <p className="text-xs font-medium tracking-[0.1em] uppercase">Back-in-Stock Alert</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{variantLabel}</p>
                 </div>
-                <button onClick={() => { setShowInput(false); setError(""); }} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+                <button aria-label="Close alert form" onClick={() => { setShowInput(false); setError(""); }} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>

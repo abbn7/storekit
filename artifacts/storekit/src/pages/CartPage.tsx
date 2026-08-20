@@ -150,11 +150,11 @@ export default function CartPage() {
                       </div>
                       <div className="flex items-center justify-between mt-6">
                         <div className="flex items-center border border-border">
-                          <button onClick={() => updateQuantity(item.variantId, item.quantity - 1)} className="px-3 py-2 hover:bg-muted transition-colors">
+                          <button aria-label={t("cart.decreaseQuantity")} onClick={() => updateQuantity(item.variantId, item.quantity - 1)} className="px-3 py-2 hover:bg-muted transition-colors">
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="px-4 py-2 text-sm tabular-nums">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.variantId, item.quantity + 1)} disabled={item.quantity >= item.maxQuantity} className="px-3 py-2 hover:bg-muted transition-colors disabled:opacity-40">
+                          <button aria-label={t("cart.increaseQuantity")} onClick={() => updateQuantity(item.variantId, item.quantity + 1)} disabled={item.quantity >= item.maxQuantity} className="px-3 py-2 hover:bg-muted transition-colors disabled:opacity-40">
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
@@ -231,7 +231,7 @@ export default function CartPage() {
                           </p>
                         </div>
                       </div>
-                      <button onClick={removePromo} className="text-green-400 hover:text-green-600 transition-colors ml-2">
+                      <button aria-label={t("cart.remove")} onClick={removePromo} className="text-green-400 hover:text-green-600 transition-colors ml-2">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </motion.div>

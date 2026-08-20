@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 /* ── Section card ────────────────────────────────────────────── */
 function SectionWrap({ children }: { children: React.ReactNode }) {
@@ -48,6 +49,7 @@ export default function AdminContentPage() {
 ════════════════════════════════════════════════════════════════ */
 function TestimonialsTab() {
   const { toast } = useToast();
+  const { t: translate } = useTranslation();
   const { data: items, refetch } = useAdminListTestimonials();
   const createTestimonial = useAdminCreateTestimonial();
   const updateTestimonial = useAdminUpdateTestimonial();
@@ -118,15 +120,16 @@ function TestimonialsTab() {
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
                     onClick={() => toggleVisibility(t)}
-                    title={t.isVisible ? "Hide" : "Show"}
+                    aria-label={t.isVisible ? translate("misc.hide") : translate("misc.show")}
+                    title={t.isVisible ? translate("misc.hide") : translate("misc.show")}
                     className={`p-2 rounded-lg transition-colors ${t.isVisible ? "text-green-600 hover:bg-green-50" : "text-muted-foreground hover:bg-muted"}`}
                   >
                     {t.isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   </button>
-                  <button onClick={() => openEdit(t)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                  <button aria-label={translate("misc.edit")} onClick={() => openEdit(t)} className="p-2 hover:bg-muted rounded-lg transition-colors">
                     <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  <button onClick={() => handleDelete(t.id)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
+                  <button aria-label={translate("misc.delete")} onClick={() => handleDelete(t.id)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -166,6 +169,7 @@ function TestimonialsTab() {
                       type="button"
                       onClick={() => setForm(f => ({ ...f, rating: String(n) }))}
                       className="p-0.5"
+                      aria-label={`${translate("misc.rating")} ${n}`}
                     >
                       <Star className={`w-5 h-5 transition-colors ${n <= parseInt(form.rating) ? "fill-[hsl(38,52%,55%)] text-[hsl(38,52%,55%)]" : "text-muted-foreground/30"}`} />
                     </button>
@@ -193,6 +197,7 @@ function TestimonialsTab() {
 ════════════════════════════════════════════════════════════════ */
 function BannersTab() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { data: items, refetch } = useAdminListBanners();
   const createBanner = useAdminCreateBanner();
   const updateBanner = useAdminUpdateBanner();
@@ -255,13 +260,13 @@ function BannersTab() {
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <button onClick={() => toggleActive(b)} className="p-2 hover:bg-muted rounded-lg transition-colors" title={b.isActive ? "Deactivate" : "Activate"}>
+                <button aria-label={b.isActive ? t("misc.hide") : t("misc.show")} onClick={() => toggleActive(b)} className="p-2 hover:bg-muted rounded-lg transition-colors" title={b.isActive ? t("misc.hide") : t("misc.show")}>
                   {b.isActive ? <EyeOff className="w-3.5 h-3.5 text-muted-foreground" /> : <Eye className="w-3.5 h-3.5 text-green-600" />}
                 </button>
-                <button onClick={() => openEdit(b)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                <button aria-label={t("misc.edit")} onClick={() => openEdit(b)} className="p-2 hover:bg-muted rounded-lg transition-colors">
                   <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
-                <button onClick={() => handleDelete(b.id)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
+                <button aria-label={t("misc.delete")} onClick={() => handleDelete(b.id)} className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

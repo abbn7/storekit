@@ -67,6 +67,7 @@ export default function NewsletterPopup() {
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-foreground/60" />
               <button
+                aria-label="Close newsletter"
                 onClick={dismiss}
                 className="absolute top-3 right-3 p-1.5 bg-background/20 hover:bg-background/40 text-background transition-colors"
               >
@@ -98,6 +99,7 @@ export default function NewsletterPopup() {
                     />
                     <motion.button
                       type="submit"
+                      aria-label="Subscribe"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
                       className="bg-foreground text-background px-4 py-3 flex items-center"

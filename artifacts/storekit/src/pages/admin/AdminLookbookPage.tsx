@@ -4,6 +4,7 @@ import { useAdminGuard } from "./useAdminGuard";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Tag } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface LookbookEntry {
   id: string;
@@ -29,6 +30,7 @@ async function adminFetch(path: string, opts?: RequestInit) {
 
 export default function AdminLookbookPage() {
   useAdminGuard();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -113,11 +115,12 @@ export default function AdminLookbookPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <Link href={`/admin/lookbook/${entry.id}/edit`}>
-                      <button className="p-1.5 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground">
+                      <button aria-label={t("misc.edit")} className="p-1.5 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                     </Link>
                     <button
+                      aria-label={t("misc.delete")}
                       onClick={() => { if (confirm(`Delete "${entry.title}"?`)) deleteEntry.mutate(entry.id); }}
                       className="p-1.5 hover:bg-destructive/10 rounded transition-colors text-muted-foreground hover:text-destructive"
                     >

@@ -7,6 +7,7 @@ import { formatPrice, getProductImage } from "@/lib/utils";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export default function AdminProductsPage() {
   useAdminGuard();
@@ -14,6 +15,7 @@ export default function AdminProductsPage() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const { data, isLoading, refetch } = useAdminListProducts({ page: String(page), pageSize: "20", search, status } as any);
   const deleteProduct = useAdminDeleteProduct();
@@ -111,9 +113,9 @@ export default function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link href={`/admin/products/${p.id}/edit`}>
-                        <button className="p-1.5 hover:bg-muted rounded transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                        <button aria-label={t("misc.edit")} className="p-1.5 hover:bg-muted rounded transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
                       </Link>
-                      <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded transition-colors">
+                      <button aria-label={t("misc.delete")} onClick={() => handleDelete(p.id, p.name)} className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>

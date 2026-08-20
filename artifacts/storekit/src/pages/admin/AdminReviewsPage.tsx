@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Trash2, Eye, EyeOff, Loader2, MessageSquare } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 interface Review {
   id: string;
@@ -40,6 +41,7 @@ function StarDisplay({ rating }: { rating: number }) {
 
 export default function AdminReviewsPage() {
   useAdminGuard();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
@@ -150,12 +152,14 @@ export default function AdminReviewsPage() {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         onClick={() => toggleApproval.mutate({ id: review.id, isApproved: !review.isApproved })}
-                        title={review.isApproved ? "Hide review" : "Approve review"}
+                        aria-label={review.isApproved ? t("misc.hide") : t("misc.show")}
+                        title={review.isApproved ? t("misc.hide") : t("misc.show")}
                         className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                       >
                         {review.isApproved ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                       <button
+                        aria-label={t("misc.delete")}
                         onClick={() => remove.mutate(review.id)}
                         className="p-1.5 rounded-md hover:bg-red-50 transition-colors text-muted-foreground/40 hover:text-red-500"
                       >

@@ -393,6 +393,9 @@ const en = {
       back: "Back",
       switchLight: "Switch to light mode",
       switchDark: "Switch to dark mode",
+      hide: "Hide",
+      show: "Show",
+      rating: "Rating",
     },
   },
 };

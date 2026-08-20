@@ -5,10 +5,12 @@ import { useAdminListCollections, useAdminDeleteCollection } from "@workspace/ap
 import { getProductImage } from "@/lib/utils";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export default function AdminCollectionsPage() {
   useAdminGuard();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { data: collections, isLoading, refetch } = useAdminListCollections();
   const deleteCollection = useAdminDeleteCollection();
 
@@ -70,9 +72,9 @@ export default function AdminCollectionsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link href={`/admin/collections/${col.id}/edit`}>
-                        <button className="p-1.5 hover:bg-muted rounded transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                        <button aria-label={t("misc.edit")} className="p-1.5 hover:bg-muted rounded transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
                       </Link>
-                      <button onClick={() => handleDelete(col.id, col.name)} className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded transition-colors">
+                      <button aria-label={t("misc.delete")} onClick={() => handleDelete(col.id, col.name)} className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>

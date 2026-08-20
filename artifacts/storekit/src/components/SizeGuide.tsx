@@ -75,7 +75,7 @@ export default function SizeGuide({ label }: { label?: string }) {
                       </button>
                     ))}
                   </div>
-                  <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-muted transition-colors">
+                  <button aria-label={t("product.close")} onClick={() => setOpen(false)} className="p-1.5 hover:bg-muted transition-colors">
                     <X className="w-4 h-4" />
                   </button>
                 </div>

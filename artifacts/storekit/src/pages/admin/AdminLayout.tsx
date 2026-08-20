@@ -128,7 +128,7 @@ export default function AdminLayout({ children, title, subtitle }: AdminLayoutPr
       </aside>
 
       {/* ── Main ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background rounded-none md:rounded-l-2xl overflow-hidden shadow-2xl">
+      <div className="flex-1 flex flex-col min-w-0 bg-background text-foreground rounded-none md:rounded-l-2xl overflow-hidden shadow-2xl">
         {/* Mobile topbar */}
         <div className="md:hidden h-14 border-b border-border/60 flex items-center justify-between px-4 glass-surface">
           <button

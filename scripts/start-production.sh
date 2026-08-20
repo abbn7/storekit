@@ -14,6 +14,7 @@ PG_BIN="$(dirname "$PG_CTL_PATH")"
 INITDB="$PG_BIN/initdb"
 PG_CTL="$PG_BIN/pg_ctl"
 CREATEDB="$PG_BIN/createdb"
+PSQL="$(command -v psql || true)"
 
 mkdir -p "$APP_ROOT/data" "${UPLOAD_DIR:-$APP_ROOT/uploads}"
 
@@ -33,7 +34,13 @@ if [ -z "${DATABASE_URL:-}" ]; then
     runuser -u postgres -- "$PG_CTL" -D "$PGDATA" -o "-c listen_addresses=127.0.0.1 -p $INTERNAL_PG_PORT -c shared_buffers=32MB -c max_connections=50" -w -t 60 start
   fi
 
-  runuser -u postgres -- "$CREATEDB" -h 127.0.0.1 -p "$INTERNAL_PG_PORT" storekit >/dev/null 2>&1 || true
+  if [ -z "$PSQL" ]; then
+    echo "PostgreSQL client (psql) was not found; cannot verify the internal database." >&2
+    exit 1
+  fi
+  if ! runuser -u postgres -- "$PSQL" -h 127.0.0.1 -p "$INTERNAL_PG_PORT" -d postgres -Atqc "SELECT 1 FROM pg_database WHERE datname = 'storekit'" | grep -qx '1'; then
+    runuser -u postgres -- "$CREATEDB" -h 127.0.0.1 -p "$INTERNAL_PG_PORT" storekit
+  fi
   export DATABASE_URL="$INTERNAL_DATABASE_URL"
 fi
 
