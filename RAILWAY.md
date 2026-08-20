@@ -16,6 +16,8 @@ StoreKit مجهز الآن ليُبنى من `Dockerfile` ويشغّل **الو�
 
 يمكنك اختيار PostgreSQL خارجي لاحقًا إذا أردت إدارة قاعدة البيانات خارج الحاوية؛ بمجرد ضبط `DATABASE_URL` سيأخذ التطبيق هذه القيمة ويستخدمها بدل PostgreSQL الداخلي.
 
+> **مسار Railway Template المتقدم:** توضح [وثائق Railway الرسمية للقوالب](https://docs.railway.com/templates/create) أن Template من حساب Railway يستطيع تعريف خدمات متعددة، مصدر GitHub، المتغيرات، Root Directory، Start command، Healthcheck، وVolume. هذا مورد داخل حساب Railway وليس ملفًا يمكن إنشاؤه من GitHub وحده؛ لذلك يظل زر GitHub الحالي هو المسار الفوري الذي لا يحتاج PostgreSQL يدويًا، بينما يمكن إنشاء Template لاحقًا إذا أردت PostgreSQL مُدارًا وVolume مُعرّفًا من البداية.
+
 ## المتغيرات الأساسية
 
 يضع Dockerfile قيمًا افتراضية آمنة للتشغيل الأول، لكن يجب تغيير كلمة مرور الإدارة قبل تسليم المتجر للعميل:
@@ -79,6 +81,7 @@ Railway سيعيد البناء والنشر تلقائيًا من آخر commit
 - `.dockerignore`: يمنع الأسرار وملفات audit و`node_modules` من دخول build context.
 - `artifacts/api-server/src/app.ts`: يوفر `/healthz` و`/api/health` ويخدم SPA fallback.
 - `artifacts/api-server/src/startup.ts`: يشغل migrations وseed ويستخدم الصور المحلية.
+- `railway-template-research.md`: يسجل نتائج التحقق من Railway Templates ومسار إنشاء قالب متعدد الموارد.
 
 ### مراجع Railway
 
