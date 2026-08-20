@@ -1,6 +1,6 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm"]
-aptPkgs = ["postgresql", "postgresql-client"]
+nixPkgs = ["...", "nodejs_22", "pnpm"]
+aptPkgs = ["...", "postgresql", "postgresql-client", "util-linux"]
 
 [phases.install]
 cmds = ["pnpm install --frozen-lockfile"]
